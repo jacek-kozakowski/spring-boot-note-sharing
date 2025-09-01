@@ -1,0 +1,58 @@
+package com.notex.student_notes.auth.controller;
+
+
+import com.notex.student_notes.auth.dto.*;
+import com.notex.student_notes.auth.service.AuthService;
+import com.notex.student_notes.user.dto.UserDto;
+import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/auth")
+@Slf4j
+@Validated
+public class AuthController {
+    private final AuthService authService;
+
+    public AuthController(AuthService authService) {
+        this.authService = authService;
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<UserDto> register(@RequestBody @Valid RegisterUserDto input){
+        log.info("POST /auth/register: Registering user {}.", input.getUsername());
+        UserDto response = authService.register(input);
+        log.debug("Success - POST /auth/register: Registered user {}.", input.getUsername());
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+    @PostMapping("/login")
+    public ResponseEntity<LoginUserResponseDto> login(@RequestBody @Valid LoginUserRequestDto input){
+        log.info("POST /auth/login: Authenticating user {}.", input.getUsername());
+        LoginUserResponseDto response = authService.authenticate(input);
+        log.debug("Success - POST /auth/login: Authenticated user {}.", input.getUsername());
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @PostMapping("/verify")
+    public ResponseEntity<?> verify(@RequestBody @Valid VerifyUserDto input){
+        log.info("POST /auth/verify: Verifying user {}.", input.getUsername());
+        authService.verifyUser(input);
+        log.debug("Success - POST /auth/verify: Verified user {}.", input.getUsername());
+        return ResponseEntity.ok("User verified successfully.");
+    }
+
+    @PostMapping("/resend")
+    public ResponseEntity<?> resendVerification(@RequestBody @Valid ResendVerificationDto input){
+        log.info("POST /auth/resend: Resending verification email to user {}", input.getUsername());
+        authService.resendVerificationEmail(input.getUsername());
+        log.debug("Success - POST /auth/resend: Resent verification email.");
+        return ResponseEntity.ok("Verification code was sent successfully. Check your email.");
+    }
+}
