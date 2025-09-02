@@ -2,6 +2,8 @@ package com.notex.student_notes.config.security;
 
 import com.notex.student_notes.auth.dto.NoChangesProvidedException;
 import com.notex.student_notes.auth.exceptions.*;
+import com.notex.student_notes.note.exceptions.NoteDeletedException;
+import com.notex.student_notes.note.exceptions.NoteNotFoundException;
 import com.notex.student_notes.user.exceptions.UserNotFoundException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -93,7 +95,7 @@ public class GlobalExceptionHandler {
     }
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<Map<String,Object>> handleUserNotFoundException(Exception ex){
-        return buildErrorResponse(ex, HttpStatus.NOT_FOUND, ex.getMessage());
+        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, ex.getMessage());
     }
     @ExceptionHandler(SamePasswordException.class)
     public ResponseEntity<Map<String, Object>> handleSamePasswordException(Exception ex){
@@ -101,6 +103,14 @@ public class GlobalExceptionHandler {
     }
     @ExceptionHandler(NoChangesProvidedException.class)
     public ResponseEntity<Map<String, Object>> handleNoChangesProvidedException(Exception ex){
+        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+    @ExceptionHandler(NoteNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNoteNotFoundException(Exception ex){
+        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+    @ExceptionHandler(NoteDeletedException.class)
+    public ResponseEntity<Map<String, Object>> handleNoteDeletedException(Exception ex){
         return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 }
