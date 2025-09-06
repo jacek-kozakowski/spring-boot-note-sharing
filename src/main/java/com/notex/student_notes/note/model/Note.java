@@ -21,8 +21,7 @@ public class Note {
 
     @Column(nullable = false)
     private String title;
-    @Lob
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Column(length = 5000, nullable = false)
     private String content;
 
     @ManyToOne
@@ -34,7 +33,6 @@ public class Note {
 
     private boolean deleted;
     private LocalDateTime deletedAt;
-
 
     public Note(CreateNoteDto input, User owner){
         this.title = input.getTitle();

@@ -11,6 +11,7 @@ import com.notex.student_notes.note.repository.NoteRepository;
 import com.notex.student_notes.user.exceptions.UserNotFoundException;
 import com.notex.student_notes.user.model.User;
 import com.notex.student_notes.user.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,7 @@ import java.util.List;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class NoteService {
 
     private final NoteRepository noteRepository;
@@ -26,15 +28,19 @@ public class NoteService {
 
     private static final String FILTER_FOR_USER = "active";
 
-    public NoteService(NoteRepository noteRepository, UserRepository userRepository) {
-        this.noteRepository = noteRepository;
-        this.userRepository = userRepository;
-    }
 
     public List<NoteDto> getUsersNotes(User user){
         log.info("User {} fetching their notes", user.getUsername());
         List<NoteDto> userNotes = convertToNoteDto(noteRepository.findAllByOwner(user), FILTER_FOR_USER);
         log.debug("User {} fetched {} notes", user.getUsername(), userNotes.size());
+        return userNotes;
+    }
+
+    public List<NoteDto> getUsersNotes(String username){
+        log.info("Fetching {}'s notes", username);
+        User user = getUser(username);
+        List<NoteDto> userNotes = convertToNoteDto(noteRepository.findAllByOwner(user), FILTER_FOR_USER);
+        log.debug("Fetched {} {}'s notes", userNotes.size(), username);
         return userNotes;
     }
 
@@ -44,6 +50,12 @@ public class NoteService {
         List<NoteDto> userNotes = convertToNoteDto(noteRepository.findAllByOwner(user), filter);
         log.debug("Success - Admin fetched {} notes", userNotes.size());
         return userNotes;
+    }
+    public NoteDto getNoteById(Long id){
+        log.info("Fetching note {}", id);
+        NoteDto note = new NoteDto(findNoteById(id));
+        log.debug("Success - Fetched note {}", id);
+        return note;
     }
 
     public NoteDto createNote(CreateNoteDto inputNote, User owner){
@@ -110,7 +122,7 @@ public class NoteService {
         return note;
     }
 
-    private User getUser(String username){
+    public User getUser(String username){
         return userRepository.findByUsername(username).orElseThrow(()->{
             log.warn("Fail - User {} not found.", username);
             return new UserNotFoundException("User not found");

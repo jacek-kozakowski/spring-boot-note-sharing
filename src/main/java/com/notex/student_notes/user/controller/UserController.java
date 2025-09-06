@@ -1,10 +1,14 @@
 package com.notex.student_notes.user.controller;
 
+import com.notex.student_notes.note.dto.NoteDto;
+import com.notex.student_notes.note.service.NoteService;
 import com.notex.student_notes.user.dto.AdminViewUserDto;
 import com.notex.student_notes.user.dto.UpdateUserDto;
 import com.notex.student_notes.user.dto.UserDto;
+import com.notex.student_notes.user.model.User;
 import com.notex.student_notes.user.service.UserService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,42 +23,64 @@ import java.util.List;
 @RequestMapping("/users")
 @Validated
 @Slf4j
+@RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
-
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
+    private final NoteService noteService;
 
     @GetMapping("/me")
     public ResponseEntity<UserDto> me(){
-        return ResponseEntity.ok(getCurrentUser());
+        return ResponseEntity.ok(getCurrentUserDto());
     }
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<AdminViewUserDto>> getAllUsers(){
-        String username = getCurrentUser().getUsername();
+        String username = getCurrentUserDto().getUsername();
         log.info("GET /users: Admin {} fetching all users", username);
         ResponseEntity<List<AdminViewUserDto>> response =  ResponseEntity.ok(userService.getAllAdminViewUser());
         log.debug("Success - GET /users: Admin {} fetched all users", username);
+        return response;
+    }
+    @GetMapping("/me/notes")
+    public ResponseEntity<List<NoteDto>> getAllNotes(){
+        User currentUser = getCurrentUser();
+        log.info("GET /me/notes: User {} fetching all notes", currentUser.getUsername());
+        ResponseEntity<List<NoteDto>> response = ResponseEntity.ok(noteService.getUsersNotes(currentUser));
+        log.debug("Success - GET /me/notes: User {} fetched all notes", currentUser.getUsername());
         return response;
     }
 
     @GetMapping("/{username}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AdminViewUserDto> getUserByUsername(@PathVariable String username){
-        String adminUsername = getCurrentUser().getUsername();
+        String adminUsername = getCurrentUserDto().getUsername();
         log.info("GET /users/{}: Admin {} fetching user.", username, adminUsername);
         ResponseEntity<AdminViewUserDto> response =  ResponseEntity.ok(userService.getAdminViewUserByUsername(username));
         log.debug("Success - GET /users/{}: Admin {} fetched user.", username, adminUsername);
         return response;
     }
+    @GetMapping("/{username}/notes")
+    public ResponseEntity<List<NoteDto>> getUserNotes(@PathVariable String username){
+        log.info("GET /users/{}/notes: Fetching user's notes.", username);
+        ResponseEntity<List<NoteDto>> response = ResponseEntity.ok(noteService.getUsersNotes(username));
+        log.debug("Success - GET /users/{}/notes: Fetched user's notes.", username);
+        return response;
+    }
+    @GetMapping("/{username}/notes/admin")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<NoteDto>> getUserNotesAdmin(@PathVariable String username, @RequestParam(required = false, defaultValue = "all") String filter){
+        String adminUsername = getCurrentUser().getUsername();
+        log.info("GET /users/{}/notes/admin: Admin {} fetching user's notes.", username, adminUsername);
+        ResponseEntity<List<NoteDto>> response = ResponseEntity.ok(noteService.getUsersNotesAdmin(username, filter));
+        log.debug("Success - GET /users/{}/notes/admin: Admin {} fetched user's notes.", username, adminUsername);
+        return response;
+    }
 
     @PatchMapping("/me")
     public ResponseEntity<UserDto> updateUser(@RequestBody @Valid UpdateUserDto input){
-        String username = getCurrentUser().getUsername();
+        String username = getCurrentUserDto().getUsername();
         log.info("PATCH /users/me: user {} updating information.", username);
         ResponseEntity<UserDto> response = ResponseEntity.ok(userService.updateUser(username,input));
         log.debug("Success - PATCH /users/me: user {} updated their information.", username);
@@ -64,16 +90,23 @@ public class UserController {
     @PatchMapping("/{username}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserDto> updateUserByAdmin(@PathVariable String username,@RequestBody @Valid UpdateUserDto input){
-        String adminUsername = getCurrentUser().getUsername();
+        String adminUsername = getCurrentUserDto().getUsername();
         log.info("PATCH /users/{}: Admin {} updating user.", username, adminUsername);
         ResponseEntity<UserDto> response = ResponseEntity.ok(userService.updateUser(username,input));
         log.debug("Success - PATCH /users/{}: Admin {} updated user's information.", username, adminUsername);
         return response;
     }
 
-    private UserDto getCurrentUser(){
+    private UserDto getCurrentUserDto(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         return userService.getUserByUsername(username);
     }
+
+    private User getCurrentUser(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        return userService.getUserEntityByUsername(username);
+    }
+
 }

@@ -10,6 +10,7 @@ import com.notex.student_notes.user.exceptions.UserNotFoundException;
 import com.notex.student_notes.user.model.User;
 import com.notex.student_notes.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,15 +19,11 @@ import java.util.List;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
 
     public UserDto getUserById(Long id){
         User user = userRepository.findById(id).orElseThrow(()->{
@@ -42,6 +39,12 @@ public class UserService {
             return new UserNotFoundException("User not found");
         });
         return new UserDto(user);
+    }
+    public User getUserEntityByUsername(String username){
+        return userRepository.findByUsername(username).orElseThrow(()->{
+            log.warn("User {} not found", username);
+            return new UserNotFoundException("User not found");
+        });
     }
 
     public AdminViewUserDto getAdminViewUserByUsername(String username){
