@@ -108,6 +108,8 @@ public class AuthService {
         }
 
     }
+
+    @Transactional
     public void resendVerificationEmail(String username){
         log.info("Resending verification email to user {}", username);
         Optional<User> userOptional = userRepository.findByUsername(username);

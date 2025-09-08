@@ -24,17 +24,17 @@ public class NoteController {
 
     private final NoteService noteService;
 
-    @GetMapping("/{id}")
-    public ResponseEntity<NoteDto> getNoteById(@PathVariable Long id){
-        log.info("GET /notes/{}: Fetching note.", id);
-        NoteDto note = noteService.getNoteById(id);
+    @GetMapping("/{noteId}")
+    public ResponseEntity<NoteDto> getNoteById(@PathVariable Long noteId){
+        log.info("GET /notes/{}: Fetching note.", noteId);
+        NoteDto note = noteService.getNoteById(noteId);
         ResponseEntity<NoteDto> response = ResponseEntity.ok(note);
-        log.debug("Success - GET /notes/{}: Fetched note.", id);
+        log.debug("Success - GET /notes/{}: Fetched note.", noteId);
         return response;
     }
 
-    @PostMapping
-    public ResponseEntity<NoteDto> createNote(@RequestBody @Validated CreateNoteDto inputNote){
+    @PostMapping(consumes = {"multipart/form-data"})
+    public ResponseEntity<NoteDto> createNote(@ModelAttribute @Validated CreateNoteDto inputNote){
         User currentUser = getCurrentUser();
         log.info("POST /notes: User {} creating a note", currentUser.getUsername());
         NoteDto response = noteService.createNote(inputNote, currentUser);
@@ -42,29 +42,41 @@ public class NoteController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @PatchMapping("/{id}")
-    public ResponseEntity<NoteDto> updateNote(@PathVariable Long id, @RequestBody @Validated UpdateNoteDto inputNote){
-        log.info("PATCH /notes/{}: User {} updating note.", id, getCurrentUser().getUsername());
+    @PatchMapping(value = "/{noteId}", consumes = {"multipart/form-data"})
+    public ResponseEntity<NoteDto> updateNote(@PathVariable Long noteId, @ModelAttribute @Validated UpdateNoteDto inputNote){
+        log.info("PATCH /notes/{}: User {} updating note.", noteId, getCurrentUser().getUsername());
         User currentUser = getCurrentUser();
-        if(!noteService.verifyUserIsOwner(id, currentUser)){
-            log.warn("Fail - User {} can't update note {}: User is not the owner.", currentUser.getUsername(), id);
+        if(!noteService.verifyUserIsOwner(noteId, currentUser)){
+            log.warn("Fail - User {} can't update note {}: User is not the owner.", currentUser.getUsername(), noteId);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        NoteDto updatedNote = noteService.updateNote(id, inputNote);
-        log.debug("Success - PATCH /notes/{}: User {} updated note.", id, currentUser.getUsername());
+        NoteDto updatedNote = noteService.updateNote(noteId, inputNote);
+        log.debug("Success - PATCH /notes/{}: User {} updated note.", noteId, currentUser.getUsername());
         return ResponseEntity.ok(updatedNote);
     }
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteNote(@PathVariable Long id){
-        log.info("DELETE /notes/{}: User {} deleting note.", id, getCurrentUser().getUsername());
+    @DeleteMapping("/{noteId}")
+    public ResponseEntity<?> deleteNote(@PathVariable Long noteId){
+        log.info("DELETE /notes/{}: User {} deleting note.", noteId, getCurrentUser().getUsername());
         User currentUser = getCurrentUser();
-        if(!noteService.verifyUserIsOwner(id, currentUser)){
-            log.warn("Fail - User {} can't delete note {}: User is not the owner.", currentUser.getUsername(), id);
+        if(!noteService.verifyUserIsOwner(noteId, currentUser)){
+            log.warn("Fail - User {} can't delete note {}: User is not the owner.", currentUser.getUsername(), noteId);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        noteService.deleteNote(id);
-        log.debug("Success - DELETE /notes/{}: User {} deleted note.", id, currentUser.getUsername());
+        noteService.deleteNote(noteId);
+        log.debug("Success - DELETE /notes/{}: User {} deleted note.", noteId, currentUser.getUsername());
         return ResponseEntity.ok().body("Note successfully deleted");
+    }
+    @DeleteMapping("/{noteId}/images/{imageId}")
+    public ResponseEntity<?> deleteNoteImage(@PathVariable Long noteId, @PathVariable Long imageId){
+        log.info("DELETE /notes/{}/images/{}: User {} deleting note image.", noteId, imageId, getCurrentUser().getUsername());
+        User currentUser = getCurrentUser();
+        if(!noteService.verifyUserIsOwner(noteId, currentUser)){
+            log.warn("Fail - User {} can't delete note image {}: User is not the owner.", currentUser.getUsername(), imageId);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        noteService.deleteNoteImage(noteId, imageId);
+        log.debug("Success - DELETE /notes/{}/images/{}: User {} deleted note image.", noteId, imageId, currentUser.getUsername());
+        return ResponseEntity.ok().body("Note image successfully deleted");
     }
 
     private User getCurrentUser() {

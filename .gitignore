@@ -32,5 +32,7 @@ build/
 ### VS Code ###
 .vscode/
 
-
+postgres-data/
+minio-data/
+docker/volumes/
 .env

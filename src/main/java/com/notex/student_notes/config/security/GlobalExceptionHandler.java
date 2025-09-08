@@ -3,6 +3,8 @@ package com.notex.student_notes.config.security;
 import com.notex.student_notes.auth.dto.NoChangesProvidedException;
 import com.notex.student_notes.auth.exceptions.*;
 import com.notex.student_notes.note.exceptions.NoteDeletedException;
+import com.notex.student_notes.note.exceptions.NoteImageDeleteException;
+import com.notex.student_notes.note.exceptions.NoteImageUploadException;
 import com.notex.student_notes.note.exceptions.NoteNotFoundException;
 import com.notex.student_notes.user.exceptions.UserNotFoundException;
 import jakarta.persistence.EntityNotFoundException;
@@ -112,5 +114,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoteDeletedException.class)
     public ResponseEntity<Map<String, Object>> handleNoteDeletedException(Exception ex){
         return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+    @ExceptionHandler(NoteImageDeleteException.class)
+    public ResponseEntity<Map<String, Object>> handleNoteImageDeletingException(Exception ex){
+        return buildErrorResponse(ex, HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
+    }
+    @ExceptionHandler(NoteImageUploadException.class)
+    public ResponseEntity<Map<String, Object>> handleNoteImageUploadingException(Exception ex){
+        return buildErrorResponse(ex, HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
     }
 }

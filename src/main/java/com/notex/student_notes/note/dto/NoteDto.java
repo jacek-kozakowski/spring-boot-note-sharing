@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -17,6 +18,7 @@ public class NoteDto {
     private String ownerUsername;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private List<NoteImageDto> images;
 
     public NoteDto(Note note) {
         this.id = note.getId();

@@ -4,6 +4,9 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @Getter
 @Setter
@@ -16,13 +19,23 @@ public class UpdateNoteDto {
     @Size(max = MAX_CONTENT_LENGTH)
     private String content;
 
+    List<MultipartFile> newImages;
+
+    List<Integer> removeImageIndexes;
+
     public boolean hasTitle(){
         return title != null && !title.isBlank();
     }
     public boolean hasContent(){
         return content != null && !content.isBlank();
     }
+    public boolean hasImages(){
+        return newImages != null && !newImages.isEmpty();
+    }
+    public boolean hasRemoveImages(){
+        return removeImageIndexes != null && !removeImageIndexes.isEmpty();
+    }
     public boolean hasAny(){
-        return hasTitle() || hasContent();
+        return hasTitle() || hasContent() || hasImages() || hasRemoveImages();
     }
 }

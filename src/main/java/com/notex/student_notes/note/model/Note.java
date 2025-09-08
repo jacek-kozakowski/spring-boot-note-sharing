@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "notes")
@@ -34,6 +36,9 @@ public class Note {
     private boolean deleted;
     private LocalDateTime deletedAt;
 
+    @OneToMany(mappedBy = "note", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<NoteImage> images = new ArrayList<>();
+
     public Note(CreateNoteDto input, User owner){
         this.title = input.getTitle();
         this.content = input.getContent();
@@ -42,6 +47,16 @@ public class Note {
         this.updatedAt = LocalDateTime.now();
         this.deleted = false;
         this.deletedAt = null;
+    }
+
+    public void addImage(NoteImage image) {
+        images.add(image);
+        image.setNote(this);
+    }
+
+    public void removeImage(NoteImage image) {
+        images.remove(image);
+        image.setNote(null);
     }
 
 }
