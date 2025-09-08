@@ -55,6 +55,8 @@ public class User implements UserDetails {
     private String verificationCode;
     private LocalDateTime verificationExpiration;
 
+
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.singletonList(new SimpleGrantedAuthority(role.name()));

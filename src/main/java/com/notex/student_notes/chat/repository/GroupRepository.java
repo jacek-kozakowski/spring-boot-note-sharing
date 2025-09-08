@@ -1,0 +1,15 @@
+package com.notex.student_notes.chat.repository;
+
+import com.notex.student_notes.chat.model.Group;
+import com.notex.student_notes.user.model.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface GroupRepository extends JpaRepository<Group, Long> {
+    Optional<Group> findByName(String name);
+    List<Group> findAllByOwner(User user);
+    List<Group> findByNameContaining(String namePart);
+
+}
