@@ -1,5 +1,6 @@
-package com.notex.student_notes.chat.model;
+package com.notex.student_notes.message.model;
 
+import com.notex.student_notes.group.model.Group;
 import com.notex.student_notes.user.model.User;
 import jakarta.persistence.*;
 import lombok.Getter;

@@ -1,7 +1,8 @@
-package com.notex.student_notes.chat.model;
+package com.notex.student_notes.group.model;
 
 import com.notex.student_notes.user.model.User;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,17 +22,31 @@ public class Group {
     @Id
     private Long id;
 
-    @Column(unique = true, nullable = false, length = 100)
+    @Column(unique = true, nullable = false)
+    @Size(min=3, max=50)
     private String name;
 
-    @Column(length = 5000, nullable = false)
+    @Column(nullable = false)
+    @Size(max=5000)
     private String description;
+
+    @Column(nullable = false)
+    private boolean privateGroup;
+
+    @Size(min =8, max = 25)
+    private String password;
+
+    private boolean deleted;
+    private LocalDateTime deletedAt;
+
+    private LocalDateTime updatedAt;
 
     @ManyToOne
     @JoinColumn(name = "owner_id")
     private User owner;
 
     private LocalDateTime createdAt;
+
 
     @ManyToMany
     @JoinTable(
@@ -44,5 +59,20 @@ public class Group {
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
+        this.deleted = false;
+        this.deletedAt = null;
+        this.updatedAt = null;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void addMember(User user) {
+        members.add(user);
+    }
+    public void removeMember(User user) {
+        members.remove(user);
     }
 }

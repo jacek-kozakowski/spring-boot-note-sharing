@@ -2,6 +2,7 @@ package com.notex.student_notes.config.security;
 
 import com.notex.student_notes.auth.dto.NoChangesProvidedException;
 import com.notex.student_notes.auth.exceptions.*;
+import com.notex.student_notes.group.exceptions.*;
 import com.notex.student_notes.note.exceptions.NoteDeletedException;
 import com.notex.student_notes.note.exceptions.NoteImageDeleteException;
 import com.notex.student_notes.note.exceptions.NoteImageUploadException;
@@ -122,5 +123,33 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoteImageUploadException.class)
     public ResponseEntity<Map<String, Object>> handleNoteImageUploadingException(Exception ex){
         return buildErrorResponse(ex, HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
+    }
+    @ExceptionHandler(AddUserRequestInvalidException.class)
+    public ResponseEntity<Map<String, Object>> handleAddUserRequestInvalidException(Exception ex){
+        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+    @ExceptionHandler(GroupNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleGroupNotFoundException(Exception ex){
+        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+    @ExceptionHandler(GroupAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handleGroupAlreadyExists(Exception ex){
+        return buildErrorResponse(ex, HttpStatus.CONFLICT, ex.getMessage());
+    }
+    @ExceptionHandler(InvalidGroupCreateRequestException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidGroupCreateRequest(Exception ex){
+        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+    @ExceptionHandler(UserAlreadyInGroupException.class)
+    public ResponseEntity<Map<String, Object>> handleUserAlreadyInGroupException(Exception ex){
+        return buildErrorResponse(ex, HttpStatus.CONFLICT, ex.getMessage());
+    }
+    @ExceptionHandler(GroupDeletedException.class)
+    public ResponseEntity<Map<String, Object>> handleGroupDeletedException(Exception ex){
+        return buildErrorResponse(ex, HttpStatus.GONE, ex.getMessage());
+    }
+    @ExceptionHandler(InvalidGroupUpdateRequestException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidGroupUpdateRequestException(Exception ex){
+        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 }
