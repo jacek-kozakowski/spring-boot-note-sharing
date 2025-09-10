@@ -33,7 +33,7 @@ public class Group {
     @Column(nullable = false)
     private boolean privateGroup;
 
-    @Size(min =8, max = 25)
+    @Size(min =8)
     private String password;
 
     private boolean deleted;

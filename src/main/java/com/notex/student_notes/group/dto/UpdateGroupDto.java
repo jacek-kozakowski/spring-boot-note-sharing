@@ -2,13 +2,10 @@ package com.notex.student_notes.group.dto;
 
 
 import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
-@NoArgsConstructor
+
+@Data
 public class UpdateGroupDto {
 
     @Size(min = 3, max = 50)
@@ -17,7 +14,7 @@ public class UpdateGroupDto {
     @Size(max = 5000)
     private String description;
 
-    private Boolean isPrivate;
+    private Boolean privateGroup;
 
     private String password;
 
@@ -28,8 +25,8 @@ public class UpdateGroupDto {
     public boolean hasDescription(){
         return description != null && !description.isBlank();
     }
-    public boolean hasIsPrivate(){
-        return isPrivate != null;
+    public boolean hasPrivateGroup(){
+        return privateGroup != null;
     }
 
     public boolean hasPassword(){
@@ -37,6 +34,6 @@ public class UpdateGroupDto {
     }
 
     public boolean hasAny(){
-        return hasName() || hasDescription() || hasIsPrivate() || hasPassword();
+        return hasName() || hasDescription() || hasPrivateGroup() || hasPassword();
     }
 }

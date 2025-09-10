@@ -104,13 +104,6 @@ public class UserControllerTests {
                 .andExpect(jsonPath("$.email").value("test@example.com"));
     }
 
-    @Test
-    @WithMockUser(username = "testuser", roles = "USER")
-    void me_ShouldReturnForbidden_WhenUserIsNotAdmin() throws Exception{
-        when(userService.getUserByUsername("testuser")).thenReturn(mockUserDto);
-        mockMvc.perform(get("/users/testuser"))
-                .andExpect(status().isForbidden());
-    }
 
     @Test
     @WithMockUser(username = "testuser", roles = "USER")
@@ -140,8 +133,8 @@ public class UserControllerTests {
 
     @Test
     @WithMockUser(username = "testadmin", roles = "ADMIN")
-    void getUserByAdmin_ShouldGetUser_WhenAdminAndUserExists() throws Exception {
-        UserDto mockAdmin = new UserDto();
+    void getUserByUsername_ShouldGetUser_WhenAdminAndUserExists() throws Exception {
+        User mockAdmin = new User();
         mockAdmin.setUsername("testadmin");
         mockAdmin.setRole(Role.ROLE_ADMIN);
 
@@ -154,7 +147,7 @@ public class UserControllerTests {
         targetUser.setLastName("User");
         targetUser.setEnabled(true);
 
-        when(userService.getUserByUsername("testadmin")).thenReturn(mockAdmin);
+        when(userService.getUserEntityByUsername(anyString())).thenReturn(mockAdmin);
         when(userService.getAdminViewUserByUsername("targetuser")).thenReturn(targetUser);
 
         mockMvc.perform(get("/users/targetuser"))

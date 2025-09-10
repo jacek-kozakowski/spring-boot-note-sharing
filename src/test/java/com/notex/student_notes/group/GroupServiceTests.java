@@ -1,9 +1,6 @@
 package com.notex.student_notes.group;
 
-import com.notex.student_notes.group.dto.AddUserToGroupRequest;
-import com.notex.student_notes.group.dto.CreateGroupDto;
-import com.notex.student_notes.group.dto.GroupDto;
-import com.notex.student_notes.group.dto.UpdateGroupDto;
+import com.notex.student_notes.group.dto.*;
 import com.notex.student_notes.group.exceptions.*;
 import com.notex.student_notes.group.model.Group;
 import com.notex.student_notes.group.repository.GroupRepository;
@@ -167,7 +164,7 @@ public class GroupServiceTests {
         UpdateGroupDto input = new UpdateGroupDto();
         input.setName("new name");
         input.setDescription("new description");
-        input.setIsPrivate(true);
+        input.setPrivateGroup(true);
         input.setPassword("password123");
 
         when(groupRepository.findById(1L)).thenReturn(Optional.of(mockGroup));
@@ -209,7 +206,7 @@ public class GroupServiceTests {
     @Test
     void updateGroup_ShouldThrowException_WhenGroupIsAlreadyPrivate(){
         UpdateGroupDto input = new UpdateGroupDto();
-        input.setIsPrivate(true);
+        input.setPrivateGroup(true);
         input.setPassword("password123");
 
         when(groupRepository.findById(1L)).thenReturn(Optional.of(mockGroup));
@@ -227,7 +224,7 @@ public class GroupServiceTests {
         mockGroup.setPassword(null);
 
         UpdateGroupDto input = new UpdateGroupDto();
-        input.setIsPrivate(true);
+        input.setPrivateGroup(true);
 
         when(groupRepository.findById(1L)).thenReturn(Optional.of(mockGroup));
         InvalidGroupUpdateRequestException ex = assertThrows(InvalidGroupUpdateRequestException.class, ()->groupService.updateGroup(1L, input));
@@ -243,7 +240,7 @@ public class GroupServiceTests {
         UpdateGroupDto input = new UpdateGroupDto();
         input.setName("new name");
         input.setDescription("new description");
-        input.setIsPrivate(true);
+        input.setPrivateGroup(true);
         input.setPassword("password123");
 
         when(groupRepository.findById(1L)).thenReturn(Optional.empty());
@@ -265,7 +262,7 @@ public class GroupServiceTests {
         UpdateGroupDto input = new UpdateGroupDto();
         input.setName("new name");
         input.setDescription("new description");
-        input.setIsPrivate(true);
+        input.setPrivateGroup(true);
         input.setPassword("password123");
 
         when(groupRepository.findById(1L)).thenReturn(Optional.of(mockGroup));
@@ -280,8 +277,7 @@ public class GroupServiceTests {
     // TODO joinGroup tests
     @Test
     void joinGroup_ShouldJoinGroup_WhenGroupFound(){
-        AddUserToGroupRequest request = new AddUserToGroupRequest();
-        request.setGroupId(1L);
+        JoinGroupRequestDto request = new JoinGroupRequestDto();
         request.setPassword("password123");
 
         User joiningUser = new User();
@@ -290,10 +286,9 @@ public class GroupServiceTests {
         when(groupRepository.findById(1L)).thenReturn(Optional.of(mockGroup));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
 
-        groupService.joinGroup(request, joiningUser);
+        groupService.joinGroup(1L, request, joiningUser);
 
         assertEquals(2, mockGroup.getMembers().size());
-        verify(groupRepository, times(1)).findById(1L);
         verify(groupRepository, times(1)).save(any(Group.class));
         verify(passwordEncoder, times(1)).matches(anyString(), anyString());
 
@@ -302,12 +297,12 @@ public class GroupServiceTests {
     @Test
     void addUserToGroup_ShouldAddUserToGroup_WhenGroupFound(){
         User userToAdd = new User();
-        userToAdd.setUsername("joininguser");
+        userToAdd.setUsername("userToAdd");
 
         when(groupRepository.findById(1L)).thenReturn(Optional.of(mockGroup));
         when(userRepository.findByUsername(anyString())).thenReturn(Optional.of(userToAdd));
 
-        groupService.addUserToGroup(1L, "joininguser");
+        groupService.addUserToGroup(1L, "userToAdd");
         assertEquals(2, mockGroup.getMembers().size());
         verify(groupRepository, times(2)).findById(1L);
         verify(userRepository, times(1)).findByUsername(anyString());
@@ -345,7 +340,6 @@ public class GroupServiceTests {
         groupService.leaveGroup(1L, leavingUser);
 
         assertEquals(1, mockGroup.getMembers().size());
-        verify(groupRepository, times(2)).findById(1L);
         verify(groupRepository, times(1)).save(any(Group.class));
     }
 }

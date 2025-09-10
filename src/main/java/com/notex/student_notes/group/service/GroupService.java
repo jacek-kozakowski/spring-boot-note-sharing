@@ -1,12 +1,10 @@
 package com.notex.student_notes.group.service;
 
-import com.notex.student_notes.group.dto.AddUserToGroupRequest;
-import com.notex.student_notes.group.dto.CreateGroupDto;
-import com.notex.student_notes.group.dto.GroupDto;
-import com.notex.student_notes.group.dto.UpdateGroupDto;
+import com.notex.student_notes.group.dto.*;
 import com.notex.student_notes.group.exceptions.*;
 import com.notex.student_notes.group.model.Group;
 import com.notex.student_notes.group.repository.GroupRepository;
+import com.notex.student_notes.user.dto.UserDto;
 import com.notex.student_notes.user.exceptions.UserNotFoundException;
 import com.notex.student_notes.user.model.User;
 import com.notex.student_notes.user.repository.UserRepository;
@@ -34,16 +32,27 @@ public class GroupService {
         return new GroupDto(group);
     }
 
+    public List<GroupDto> getGroupsByPartialName(String partialName){
+        log.info("Fetching groups with partial name {}", partialName);
+        List<Group> groups = groupRepository.findByNameContaining(partialName);
+        log.debug("Success - Fetched {} groups with partial name {}", groups.size(), partialName);
+        return groups.stream().filter(g -> !g.isDeleted()).map(GroupDto::new).toList();
+    }
+
     public List<GroupDto> getAllGroupsByUser(User user){
         log.info("Fetching all groups for user {}", user.getUsername());
         List<Group> userGroups = groupRepository.findAllByOwner(user);
         log.debug("Success - Fetched {} groups for user {}", userGroups.size(), user.getUsername());
-        return userGroups.stream().map(GroupDto::new).toList();
+        return userGroups.stream().filter(g -> !g.isDeleted()).map(GroupDto::new).toList();
     }
 
-    public List<User> getUsersInGroup(Long groupId){
+    public List<UserDto> getUsersInGroup(Long groupId){
         Group group = findGroupById(groupId);
-        return group.getMembers().stream().toList();
+        if (group.isDeleted()){
+            log.warn("Fail - Group {} is deleted", groupId);
+            throw new GroupDeletedException("Group was deleted");
+        }
+        return group.getMembers().stream().map(UserDto::new).toList();
     }
 
     @Transactional
@@ -105,8 +114,8 @@ public class GroupService {
         if (input.hasDescription()){
             groupToUpdate.setDescription(input.getDescription());
         }
-        if (input.hasIsPrivate()){
-            if (input.getIsPrivate()){
+        if (input.hasPrivateGroup()){
+            if (input.getPrivateGroup()){
                 if (groupToUpdate.isPrivateGroup()) {
                     log.warn("Fail - Group is already private");
                     throw new InvalidGroupUpdateRequestException("Group is already private");
@@ -129,7 +138,7 @@ public class GroupService {
                 }
             }
         }
-        if (input.hasPassword() && !input.hasIsPrivate()){
+        if (input.hasPassword() && !input.hasPrivateGroup()){
             if (!groupToUpdate.isPrivateGroup()){
                 log.warn("Fail - Can't set password for public group");
                 throw new InvalidGroupUpdateRequestException("Can't set password for public group");
@@ -144,19 +153,23 @@ public class GroupService {
     }
 
     @Transactional
-    public void joinGroup(AddUserToGroupRequest request, User user){
-        if (request.getGroupId() == null){
+    public void joinGroup(Long groupId, JoinGroupRequestDto request, User user){
+        if (groupId == null){
             log.warn("Fail - Group id is null");
             throw new AddUserRequestInvalidException("Group id is null");
         }
-        log.info("User {} joining group {}", user.getUsername(), request.getGroupId());
-        Group group = findGroupById(request.getGroupId());
+        log.info("User {} joining group {}", user.getUsername(), groupId);
+        Group group = findGroupById(groupId);
+        if (isUserInGroup(groupId, user)){
+            log.warn("User {} is already in group {}", user.getUsername(), groupId);
+            throw new UserAlreadyInGroupException("User is already in group");
+        }
         if (group.isDeleted()){
-            log.warn("Fail - Group {} is deleted", request.getGroupId());
+            log.warn("Fail - Group {} is deleted", groupId);
             throw new GroupDeletedException("Group was deleted");
         }
         if (group.isPrivateGroup()){
-            if (group.getPassword() == null || !passwordEncoder.matches(request.getPassword(), group.getPassword())){
+            if (!passwordEncoder.matches(request.getPassword(), group.getPassword())){
                 log.warn("Fail - Wrong password");
                 throw new AddUserRequestInvalidException("Wrong password");
             }else{
@@ -166,7 +179,7 @@ public class GroupService {
             group.addMember(user);
         }
         groupRepository.save(group);
-        log.debug("Success - User {} joined group {}", user.getUsername(), request.getGroupId());
+        log.debug("Success - User {} joined group {}", user.getUsername(), groupId);
     }
 
     @Transactional
@@ -202,6 +215,14 @@ public class GroupService {
     public void leaveGroup(Long groupId, User user){
         log.info("{} leaving group {}",user.getUsername(),  groupId);
         Group group = findGroupById(groupId);
+        if (group.isDeleted()){
+            log.warn("Fail - Group {} is deleted", groupId);
+            throw new GroupDeletedException("Group was deleted");
+        }
+        if (!isUserInGroup(groupId, user)){
+            log.warn("Fail - User {} is not in group {}", user.getUsername(), groupId);
+            throw new UserNotInGroupException("User is not in group");
+        }
         if (isUserGroupOwner(groupId, user)){
             log.warn("{} is the owner of group {}. Deleting group.", user.getUsername(), groupId);
             deleteGroupById(groupId);

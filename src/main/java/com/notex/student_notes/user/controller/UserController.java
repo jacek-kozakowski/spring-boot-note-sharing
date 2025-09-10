@@ -1,10 +1,13 @@
 package com.notex.student_notes.user.controller;
 
+import com.notex.student_notes.group.dto.GroupDto;
+import com.notex.student_notes.group.service.GroupService;
 import com.notex.student_notes.note.dto.NoteDto;
 import com.notex.student_notes.note.service.NoteService;
 import com.notex.student_notes.user.dto.AdminViewUserDto;
 import com.notex.student_notes.user.dto.UpdateUserDto;
 import com.notex.student_notes.user.dto.UserDto;
+import com.notex.student_notes.user.model.Role;
 import com.notex.student_notes.user.model.User;
 import com.notex.student_notes.user.service.UserService;
 import jakarta.validation.Valid;
@@ -28,6 +31,7 @@ public class UserController {
 
     private final UserService userService;
     private final NoteService noteService;
+    private final GroupService groupService;
 
     @GetMapping("/me")
     public ResponseEntity<UserDto> me(){
@@ -52,13 +56,38 @@ public class UserController {
         return response;
     }
 
+    @GetMapping("/me/groups")
+    public ResponseEntity<List<GroupDto>> getAllGroups(){
+        User currentUser = getCurrentUser();
+        log.info("GET /users/me/groups: User {} fetching all groups", currentUser.getUsername());
+        List<GroupDto> groups = groupService.getAllGroupsByUser(currentUser);
+        log.debug("Success - GET /users/me/groups: User {} fetched all groups", currentUser.getUsername());
+        return ResponseEntity.ok(groups);
+    }
+
     @GetMapping("/{username}")
+    public ResponseEntity<?> getUserByUsername(@PathVariable String username){
+        User currentUser = getCurrentUser();
+        if (currentUser.getRole().equals(Role.ROLE_ADMIN)) {
+            String adminUsername = currentUser.getUsername();
+            log.info("GET /users/{}: Admin {} fetching user.", username, adminUsername);
+            AdminViewUserDto user = userService.getAdminViewUserByUsername(username);
+            log.debug("Success - GET /users/{}: Admin {} fetched user.", username, adminUsername);
+            return ResponseEntity.ok(user);
+        } else {
+            log.info("GET /users/{}: User {} fetching user.", username, currentUser.getUsername());
+            UserDto user = userService.getUserByUsername(username);
+            log.debug("Success - GET /users/{}: User {} fetched user.", username, currentUser.getUsername());
+            return ResponseEntity.ok(user);
+        }
+    }
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<AdminViewUserDto> getUserByUsername(@PathVariable String username){
-        String adminUsername = getCurrentUserDto().getUsername();
-        log.info("GET /users/{}: Admin {} fetching user.", username, adminUsername);
-        ResponseEntity<AdminViewUserDto> response =  ResponseEntity.ok(userService.getAdminViewUserByUsername(username));
-        log.debug("Success - GET /users/{}: Admin {} fetched user.", username, adminUsername);
+    @GetMapping("/{username}/groups")
+    public ResponseEntity<List<GroupDto>> getUserGroups(@PathVariable String username){
+        log.info("GET /users/{}/groups: Fetching user's groups.", username);
+        List<GroupDto> userGroups = groupService.getAllGroupsByUser(userService.getUserEntityByUsername(username));
+        ResponseEntity<List<GroupDto>> response = ResponseEntity.ok(userGroups);
+        log.debug("Success - GET /users/{}/groups: Fetched user's groups.", username);
         return response;
     }
     @GetMapping("/{username}/notes")

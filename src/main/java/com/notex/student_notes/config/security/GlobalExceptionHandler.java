@@ -152,4 +152,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleInvalidGroupUpdateRequestException(Exception ex){
         return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, ex.getMessage());
     }
+    @ExceptionHandler(ForbiddenOperationException.class)
+    public ResponseEntity<Map<String, Object>> handleForbiddenOperationException(Exception ex){
+        return buildErrorResponse(ex, HttpStatus.FORBIDDEN, ex.getMessage());
+    }
+    @ExceptionHandler(UserNotInGroupException.class)
+    public ResponseEntity<Map<String, Object>> handleUserNotInGroupException(Exception ex){
+        return buildErrorResponse(ex, HttpStatus.FORBIDDEN, ex.getMessage());
+    }
 }

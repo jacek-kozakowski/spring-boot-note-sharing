@@ -3,13 +3,9 @@ package com.notex.student_notes.group.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
-@NoArgsConstructor
+@Data
 public class CreateGroupDto {
     @NotBlank
     @Size(min = 3, max = 50)
@@ -22,8 +18,7 @@ public class CreateGroupDto {
     @NotNull
     private boolean isPrivate;
 
-    @Size(min =8, max = 25)
+    @Size(min =8)
     private String password;
-
 
 }

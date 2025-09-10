@@ -7,7 +7,6 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class AddUserToGroupRequest {
-    private Long groupId;
+public class JoinGroupRequestDto {
     private String password;
 }
