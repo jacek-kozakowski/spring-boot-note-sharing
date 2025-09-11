@@ -1,13 +1,15 @@
 package com.notex.student_notes.message.repository;
 
 import com.notex.student_notes.message.model.Message;
+import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 public interface MessageRepository extends JpaRepository<Message, Long> {
-    List<Message> findAllByGroupIdOrderByCreatedAtAsc(Long groupId);
+    Page<Message> findAllByGroupIdOrderByCreatedAtAsc(Long groupId, Pageable pageable);
     List<Message> findByGroupIdAndCreatedAtAfterOrderByCreatedAtAsc(Long groupId, LocalDateTime since);
 }
 

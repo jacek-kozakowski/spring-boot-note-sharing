@@ -13,7 +13,7 @@ public class NoteMapper {
     private final MinioService minioService;
 
     public NoteDto toDto(Note note){
-        NoteDto noteDto = new NoteDto(note);
+        NoteDto noteDto = new NoteDto();
         noteDto.setId(note.getId());
         noteDto.setTitle(note.getTitle());
         noteDto.setContent(note.getContent());

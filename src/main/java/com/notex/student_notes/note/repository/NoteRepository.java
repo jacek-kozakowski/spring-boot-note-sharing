@@ -13,5 +13,6 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
     Optional<Note> findById(Long id);
     List<Note> findAllByOwner(User user);
     List<Note> findAllByTitleContainingIgnoreCase(String title);
-    boolean existsByOwner(User user);
+
+    boolean existsByIdAndOwnerId(Long noteId, Long ownerId);
 }

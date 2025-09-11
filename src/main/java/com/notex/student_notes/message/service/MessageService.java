@@ -10,12 +10,13 @@ import com.notex.student_notes.message.dto.SendMessageDto;
 import com.notex.student_notes.message.model.Message;
 import com.notex.student_notes.message.repository.MessageRepository;
 import com.notex.student_notes.user.model.User;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 
 @Service
 @Slf4j
@@ -24,15 +25,15 @@ public class MessageService {
     private final MessageRepository messageRepository;
     private final GroupRepository groupRepository;
 
-    public List<MessageDto> getMessagesByGroupId(Long groupId, User currentUser){
+    public Page<MessageDto> getMessagesByGroupId(Long groupId, User currentUser, Pageable pageable){
         log.info("Fetching messages for group {}", groupId);
         if (!isUserInGroup(findGroupById(groupId), currentUser)){
             log.warn("Fail - User {} is not in group {}", currentUser.getUsername(), groupId);
             throw new UserNotInGroupException("User is not in group");
         }
-        List<Message> groupMessages = messageRepository.findAllByGroupIdOrderByCreatedAtAsc(groupId);
-        log.debug("Success - Fetched {} messages for group {}", groupMessages.size(), groupId);
-        return groupMessages.stream().map(MessageDto::new).toList();
+        Page<Message> groupMessages = messageRepository.findAllByGroupIdOrderByCreatedAtAsc(groupId, pageable);
+        log.debug("Success - Fetched {} messages for group {}", groupMessages.stream().count(), groupId);
+        return groupMessages.map(MessageDto::new);
     }
 
     @Transactional

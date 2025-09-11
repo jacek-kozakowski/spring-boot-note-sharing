@@ -78,7 +78,7 @@ public class GlobalExceptionHandler {
     }
     @ExceptionHandler(InvalidVerificationCodeException.class)
     public ResponseEntity<Map<String,Object>> handleInvalidVerificationCodeException(Exception ex){
-        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, ex.getMessage());
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND, ex.getMessage());
     }
     @ExceptionHandler(VerificationCodeExpiredException.class)
     public ResponseEntity<Map<String,Object>> handleVerificationCodeExpiredException(Exception ex){
@@ -98,7 +98,7 @@ public class GlobalExceptionHandler {
     }
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<Map<String,Object>> handleUserNotFoundException(Exception ex){
-        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, ex.getMessage());
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND, ex.getMessage());
     }
     @ExceptionHandler(SamePasswordException.class)
     public ResponseEntity<Map<String, Object>> handleSamePasswordException(Exception ex){
@@ -110,11 +110,11 @@ public class GlobalExceptionHandler {
     }
     @ExceptionHandler(NoteNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleNoteNotFoundException(Exception ex){
-        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, ex.getMessage());
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND, ex.getMessage());
     }
     @ExceptionHandler(NoteDeletedException.class)
     public ResponseEntity<Map<String, Object>> handleNoteDeletedException(Exception ex){
-        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, ex.getMessage());
+        return buildErrorResponse(ex, HttpStatus.GONE, ex.getMessage());
     }
     @ExceptionHandler(NoteImageDeleteException.class)
     public ResponseEntity<Map<String, Object>> handleNoteImageDeletingException(Exception ex){
@@ -130,7 +130,7 @@ public class GlobalExceptionHandler {
     }
     @ExceptionHandler(GroupNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleGroupNotFoundException(Exception ex){
-        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, ex.getMessage());
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND, ex.getMessage());
     }
     @ExceptionHandler(GroupAlreadyExistsException.class)
     public ResponseEntity<Map<String, Object>> handleGroupAlreadyExists(Exception ex){
@@ -151,10 +151,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidGroupUpdateRequestException.class)
     public ResponseEntity<Map<String, Object>> handleInvalidGroupUpdateRequestException(Exception ex){
         return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, ex.getMessage());
-    }
-    @ExceptionHandler(ForbiddenOperationException.class)
-    public ResponseEntity<Map<String, Object>> handleForbiddenOperationException(Exception ex){
-        return buildErrorResponse(ex, HttpStatus.FORBIDDEN, ex.getMessage());
     }
     @ExceptionHandler(UserNotInGroupException.class)
     public ResponseEntity<Map<String, Object>> handleUserNotInGroupException(Exception ex){

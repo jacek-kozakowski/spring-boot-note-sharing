@@ -9,6 +9,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -16,7 +18,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @RestController
 @Validated
@@ -28,10 +29,11 @@ public class MessageController {
     private final UserService userService;
 
     @GetMapping
-    public ResponseEntity<List<MessageDto>> getMessages(@PathVariable @Positive Long groupId){
+    public ResponseEntity<Page<MessageDto>> getMessages(@PathVariable @Positive Long groupId, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size){
         User currentUser = getCurrentUser();
         log.info("GET /groups/{}/messages: Fetching messages for group {}.", groupId, currentUser.getUsername());
-        List<MessageDto> messages = messageService.getMessagesByGroupId(groupId, currentUser);
+        Pageable pageable = Pageable.ofSize(size).withPage(page);
+        Page<MessageDto> messages = messageService.getMessagesByGroupId(groupId, currentUser, pageable);
         log.debug("Success - GET /groups/{}/messages: Fetched messages for group {}.", groupId, currentUser.getUsername());
         return ResponseEntity.ok(messages);
     }

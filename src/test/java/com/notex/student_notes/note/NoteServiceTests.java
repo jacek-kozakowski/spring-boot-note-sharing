@@ -116,7 +116,7 @@ public class NoteServiceTests {
         assertEquals("http://localhost:9000/bucket/1_0.image1.png", response.getImages().get(0).getUrl());
         assertEquals("http://localhost:9000/bucket/1_1.image2.jpg", response.getImages().get(1).getUrl());
 
-        verify(noteRepository, times(1)).save(any(Note.class));
+        verify(noteRepository, times(2)).save(any(Note.class));
         verify(minio, times(2)).uploadFile(anyString(), any(), anyLong(), anyString());
     }
 

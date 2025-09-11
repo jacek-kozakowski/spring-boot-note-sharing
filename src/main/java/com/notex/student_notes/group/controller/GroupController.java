@@ -1,7 +1,6 @@
 package com.notex.student_notes.group.controller;
 
 import com.notex.student_notes.group.dto.*;
-import com.notex.student_notes.group.exceptions.ForbiddenOperationException;
 import com.notex.student_notes.group.service.GroupService;
 import com.notex.student_notes.user.dto.UserDto;
 import com.notex.student_notes.user.model.User;

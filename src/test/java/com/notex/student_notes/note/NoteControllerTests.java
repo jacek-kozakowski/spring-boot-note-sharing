@@ -9,7 +9,6 @@ import com.notex.student_notes.note.dto.NoteImageDto;
 import com.notex.student_notes.note.dto.UpdateNoteDto;
 import com.notex.student_notes.note.mapper.NoteMapper;
 import com.notex.student_notes.note.model.Note;
-import com.notex.student_notes.note.repository.NoteRepository;
 import com.notex.student_notes.note.service.NoteService;
 import com.notex.student_notes.user.model.User;
 import org.junit.jupiter.api.BeforeEach;

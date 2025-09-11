@@ -12,22 +12,18 @@ import com.notex.student_notes.note.exceptions.NoteNotFoundException;
 import com.notex.student_notes.note.mapper.NoteMapper;
 import com.notex.student_notes.note.model.Note;
 import com.notex.student_notes.note.model.NoteImage;
-import com.notex.student_notes.note.repository.NoteImageRepository;
 import com.notex.student_notes.note.repository.NoteRepository;
 import com.notex.student_notes.user.exceptions.UserNotFoundException;
 import com.notex.student_notes.user.model.User;
 import com.notex.student_notes.user.repository.UserRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -36,10 +32,9 @@ public class NoteService {
 
     private final NoteRepository noteRepository;
     private final UserRepository userRepository;
-    private final NoteImageRepository noteImageRepository;
     private final NoteMapper noteMapper;
 
-    private static final String FILTER_FOR_USER = "active";
+    private static final Filter FILTER_FOR_USER = Filter.ACTIVE;
     private final MinioService minioService;
 
 
@@ -72,7 +67,7 @@ public class NoteService {
         return userNotes;
     }
 
-    public List<NoteDto> getUsersNotesAdmin(String username, String filter){
+    public List<NoteDto> getUsersNotesAdmin(String username, Filter filter){
         log.info("Admin fetching users {} notes",username);
         User user = getUser(username);
         List<NoteDto> userNotes = convertToNoteDto(noteRepository.findAllByOwner(user), filter);
@@ -89,8 +84,8 @@ public class NoteService {
     @Transactional
     public NoteDto createNote(CreateNoteDto inputNote, User owner){
         log.info("User {} creating a note.", owner.getUsername());
-        Note createdNote = new Note(inputNote, owner);
-
+        Note noteToCreate = new Note(inputNote, owner);
+        Note createdNote = noteRepository.save(noteToCreate);
         if (inputNote.getImages() != null){
             for (int i = 0; i < inputNote.getImages().size(); i++) {
                 MultipartFile file = inputNote.getImages().get(i);
@@ -152,7 +147,7 @@ public class NoteService {
                     addNoteImage(noteToUpdate, currIndex, file);
                 }catch (Exception e){
                     log.error("Error - Failed to upload image to MinIO", e);
-                    throw new RuntimeException("Failed to upload image to MinIO");
+                    throw new NoteImageUploadException("Failed to upload image to MinIO");
                 }
             }
             log.debug("Success - Added {} note images.", inputNote.getNewImages().size());
@@ -205,17 +200,15 @@ public class NoteService {
     }
 
     public boolean verifyUserIsOwner(Long id, User user){
-        Note note = findNoteById(id);
-        return note.getOwner().equals(user);
+        return noteRepository.existsByIdAndOwnerId(id, user.getId());
     }
 
-    private List<NoteDto> convertToNoteDto(List<Note> notes, String filter){
+    private List<NoteDto> convertToNoteDto(List<Note> notes, Filter filter){
         return notes.stream()
-                .filter(note -> switch (filter.toLowerCase()) {
-                    case "all" -> true;
-                    case "deleted" -> note.isDeleted();
-                    case "active" -> !note.isDeleted();
-                    default -> throw new IllegalArgumentException("Unknown filter: " + filter);
+                .filter(note -> switch (filter) {
+                    case ALL -> true;
+                    case DELETED -> note.isDeleted();
+                    case ACTIVE -> !note.isDeleted();
                 })
                 .map(noteMapper::toDto)
                 .toList();
@@ -239,7 +232,7 @@ public class NoteService {
     }
 
     private void addNoteImage(Note note, int i, MultipartFile file) throws Exception {
-        String filename = note.getId() + "_" + i +  "." + file.getOriginalFilename();
+        String filename = note.getId() + "_" + i + "_"+ UUID.randomUUID()+ "." + file.getOriginalFilename();
         minioService.uploadFile(filename, file.getInputStream(), file.getSize(), file.getContentType());
         NoteImage noteImage = new NoteImage();
         noteImage.setIndex(i);
