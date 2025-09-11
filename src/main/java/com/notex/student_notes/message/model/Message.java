@@ -3,6 +3,7 @@ package com.notex.student_notes.message.model;
 import com.notex.student_notes.group.model.Group;
 import com.notex.student_notes.user.model.User;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -29,6 +30,7 @@ public class Message {
     private User sender;
 
     @Column(nullable = false)
+    @Size(max=500)
     private String content;
 
     private LocalDateTime createdAt;
@@ -38,4 +40,9 @@ public class Message {
         this.createdAt = LocalDateTime.now();
     }
 
+    public Message(String content, User sender, Group group) {
+        this.content = content;
+        this.sender = sender;
+        this.group = group;
+    }
 }

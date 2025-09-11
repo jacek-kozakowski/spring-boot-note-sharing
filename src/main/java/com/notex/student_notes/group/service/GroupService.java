@@ -34,7 +34,7 @@ public class GroupService {
 
     public List<GroupDto> getGroupsByPartialName(String partialName){
         log.info("Fetching groups with partial name {}", partialName);
-        List<Group> groups = groupRepository.findByNameContaining(partialName);
+        List<Group> groups = groupRepository.findByNameContainingIgnoreCase(partialName);
         log.debug("Success - Fetched {} groups with partial name {}", groups.size(), partialName);
         return groups.stream().filter(g -> !g.isDeleted()).map(GroupDto::new).toList();
     }
@@ -46,8 +46,12 @@ public class GroupService {
         return userGroups.stream().filter(g -> !g.isDeleted()).map(GroupDto::new).toList();
     }
 
-    public List<UserDto> getUsersInGroup(Long groupId){
+    public List<UserDto> getUsersInGroup(Long groupId, User currentUser){
         Group group = findGroupById(groupId);
+        if (!isUserGroupOwner(groupId, currentUser)){
+            log.warn("Fail - User {} is not a group owner", currentUser.getUsername());
+            throw new UserNotGroupOwnerException("User is not a group owner");
+        }
         if (group.isDeleted()){
             log.warn("Fail - Group {} is deleted", groupId);
             throw new GroupDeletedException("Group was deleted");
@@ -67,7 +71,6 @@ public class GroupService {
         newGroup.setDescription(input.getDescription());
         newGroup.setOwner(owner);
         newGroup.setPrivateGroup(input.isPrivate());
-        newGroup.addMember(owner);
         if (input.isPrivate()){
             if (input.getPassword() == null || input.getPassword().isBlank()){
                 log.warn("Fail - Password is null or blank");
@@ -83,8 +86,11 @@ public class GroupService {
 
 
     @Transactional
-    public void deleteGroupById(Long id){
+    public void deleteGroupById(Long id, User currentUser){
         log.info("Deleting group {}", id);
+        if (!isUserGroupOwner(id, currentUser)){
+            throw new UserNotGroupOwnerException("User is not a group owner");
+        }
         Group groupToDelete = findGroupById(id);
         if (groupToDelete.isDeleted()){
             log.warn("Fail - Group {} is already deleted", id);
@@ -97,7 +103,10 @@ public class GroupService {
     }
 
     @Transactional
-    public GroupDto updateGroup(Long id, UpdateGroupDto input){
+    public GroupDto updateGroup(Long id, UpdateGroupDto input, User currentUser){
+        if (!isUserGroupOwner(id, currentUser)){
+            throw new UserNotGroupOwnerException("User is not a group owner");
+        }
         log.info("Updating group {}", id);
         if (!input.hasAny()){
             log.warn("Fail - No data to update");
@@ -183,7 +192,10 @@ public class GroupService {
     }
 
     @Transactional
-    public void addUserToGroup(Long groupId, String username){
+    public void addUserToGroup(Long groupId, String username, User currentUser){
+        if (!isUserGroupOwner(groupId, currentUser)){
+            throw new UserNotGroupOwnerException("User is not a group owner");
+        }
         Group group = findGroupById(groupId);
         User userToAdd = userRepository.findByUsername(username).orElseThrow(()->{
             log.warn("User with username: {} not found", username);
@@ -199,7 +211,10 @@ public class GroupService {
     }
 
     @Transactional
-    public void removeUserFromGroup(Long groupId, String username){
+    public void removeUserFromGroup(Long groupId, String username, User currentUser){
+        if (!isUserGroupOwner(groupId, currentUser)){
+            throw new UserNotGroupOwnerException("User is not a group owner");
+        }
         log.info("Removing user {} from group {}", username, groupId);
         Group group = findGroupById(groupId);
         User userToRemove = userRepository.findByUsername(username).orElseThrow(()->{
@@ -225,7 +240,7 @@ public class GroupService {
         }
         if (isUserGroupOwner(groupId, user)){
             log.warn("{} is the owner of group {}. Deleting group.", user.getUsername(), groupId);
-            deleteGroupById(groupId);
+            deleteGroupById(groupId, user);
             return;
         }
         group.removeMember(user);
@@ -234,19 +249,16 @@ public class GroupService {
     }
 
 
-    public boolean isUserInGroup(Long groupId, String username){
-        Group group = findGroupById(groupId);
-        return group.getMembers().stream().anyMatch(user -> user.getUsername().equals(username));
+    private boolean isUserInGroup(Long groupId, String username){
+        return groupRepository.existsByIdAndMembersUsername(groupId, username);
     }
 
-    public boolean isUserInGroup(Long groupId, User user){
-        Group group = findGroupById(groupId);
-        return group.getMembers().stream().anyMatch(user1 -> user1.getId().equals(user.getId()));
+    private boolean isUserInGroup(Long groupId, User user){
+        return groupRepository.existsByIdAndMembersId(groupId, user.getId());
     }
 
-    public boolean isUserGroupOwner(Long groupId, User user){
-        Group group = findGroupById(groupId);
-        return group.getOwner().getId().equals(user.getId());
+    private boolean isUserGroupOwner(Long groupId, User user){
+        return groupRepository.existsByIdAndOwnerId(groupId, user.getId());
     }
 
     private Group findGroupById(Long id){

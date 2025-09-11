@@ -160,4 +160,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleUserNotInGroupException(Exception ex){
         return buildErrorResponse(ex, HttpStatus.FORBIDDEN, ex.getMessage());
     }
+    @ExceptionHandler(UserNotGroupOwnerException.class)
+    public ResponseEntity<Map<String, Object>> handleUserNotGroupOwnerException(Exception ex){
+        return buildErrorResponse(ex, HttpStatus.FORBIDDEN, ex.getMessage());
+    }
 }

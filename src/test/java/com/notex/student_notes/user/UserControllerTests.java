@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.notex.student_notes.auth.service.AuthService;
 import com.notex.student_notes.group.repository.GroupRepository;
 import com.notex.student_notes.group.service.GroupService;
+import com.notex.student_notes.message.service.MessageService;
 import com.notex.student_notes.note.service.NoteService;
 import com.notex.student_notes.user.dto.AdminViewUserDto;
 import com.notex.student_notes.user.dto.UpdateUserDto;
@@ -52,6 +53,9 @@ public class UserControllerTests {
 
     @MockitoBean
     private NoteService noteService;
+
+    @MockitoBean
+    private MessageService messageService;
 
     @MockitoBean
     private GroupRepository groupRepository;

@@ -49,6 +49,13 @@ public class NoteService {
             return new UserNotFoundException("User not found");
         });
     }
+
+    public List<NoteDto> getNotesByPartialName(String partialName){
+        log.info("Fetching notes by partial name {}", partialName);
+        List<Note>  notes = noteRepository.findAllByTitleContainingIgnoreCase(partialName);
+        log.debug("Success - Fetched {} notes by partial name {}", notes.size(), partialName);
+        return convertToNoteDto(notes, FILTER_FOR_USER);
+    }
     
     public List<NoteDto> getUsersNotes(User user){
         log.info("User {} fetching their notes", user.getUsername());

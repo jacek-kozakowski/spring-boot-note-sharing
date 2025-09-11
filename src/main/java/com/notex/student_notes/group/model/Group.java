@@ -69,6 +69,10 @@ public class Group {
         this.updatedAt = LocalDateTime.now();
     }
 
+    public void setOwner(User user) {
+        this.owner = user;
+        this.addMember(user);
+    }
     public void addMember(User user) {
         members.add(user);
     }

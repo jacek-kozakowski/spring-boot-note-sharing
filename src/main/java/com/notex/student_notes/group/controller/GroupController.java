@@ -48,14 +48,11 @@ public class GroupController {
     @GetMapping("/{groupId}/members")
     public ResponseEntity<List<UserDto>> getUsersInGroup(@PathVariable @Positive Long groupId){
         User currentUser = getCurrentUser();
-        if (groupService.isUserInGroup(groupId, currentUser)){
-            log.info("GET /groups/{}/members: Fetching members in group.", groupId);
-            List<UserDto> members = groupService.getUsersInGroup(groupId);
-            log.debug("Success - GET /groups/{}/members: Fetched members in group.", groupId);
-            return ResponseEntity.ok(members);
-        } else {
-            throw new ForbiddenOperationException("User is not group member.");
-        }
+        log.info("GET /groups/{}/members: Fetching members in group.", groupId);
+        List<UserDto> members = groupService.getUsersInGroup(groupId, currentUser);
+        log.debug("Success - GET /groups/{}/members: Fetched members in group.", groupId);
+        return ResponseEntity.ok(members);
+
     }
     @PostMapping
     public ResponseEntity<GroupDto> createGroup(@RequestBody @Valid CreateGroupDto input){
@@ -70,10 +67,7 @@ public class GroupController {
     public ResponseEntity<GroupDto> updateGroup(@PathVariable @Positive Long groupId, @RequestBody @Valid UpdateGroupDto input){
         User currentUser = getCurrentUser();
         log.info("PATCH /groups/{}: User {} updating group.", groupId, currentUser.getUsername());
-        if (!groupService.isUserGroupOwner(groupId, currentUser)){
-            throw new ForbiddenOperationException("User is not group owner.");
-        }
-        GroupDto updatedGroup = groupService.updateGroup(groupId, input);
+        GroupDto updatedGroup = groupService.updateGroup(groupId, input, currentUser);
         log.debug("Success - PATCH /groups/{}: User {} updated group.", groupId, currentUser.getUsername());
         return ResponseEntity.ok(updatedGroup);
     }
@@ -81,11 +75,8 @@ public class GroupController {
     @DeleteMapping("/{groupId}")
     public ResponseEntity<ApiResponse> deleteGroup(@PathVariable @Positive Long groupId){
         User currentUser = getCurrentUser();
-        if (!groupService.isUserGroupOwner(groupId, currentUser)){
-            throw new ForbiddenOperationException("User is not group owner.");
-        }
         log.info("DELETE /groups/{}: User {} deleting group.", groupId, currentUser.getUsername());
-        groupService.deleteGroupById(groupId);
+        groupService.deleteGroupById(groupId, currentUser);
         log.debug("Success - DELETE /groups/{}: User {} deleted group.", groupId, currentUser.getUsername());
         return ResponseEntity.ok().body(new ApiResponse("Group deleted successfully"));
     }
@@ -93,11 +84,8 @@ public class GroupController {
     @PostMapping("/{groupId}/members/{username}")
     public ResponseEntity<ApiResponse> addUserToGroup(@PathVariable @Positive Long groupId, @PathVariable String username){
         User currentUser = getCurrentUser();
-        if (!groupService.isUserGroupOwner(groupId, currentUser)){
-            throw new ForbiddenOperationException("User is not group owner.");
-        }
         log.info("POST /groups/{}/members/{}: User {} adding member", groupId, username, currentUser.getUsername());
-        groupService.addUserToGroup(groupId, username);
+        groupService.addUserToGroup(groupId, username, currentUser);
         log.debug("Success - POST /groups/{}/members/{}: User {} added member to group.", groupId, username, currentUser.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse("User added to group successfully"));
     }
@@ -114,11 +102,8 @@ public class GroupController {
     @DeleteMapping("/{groupId}/members/{username}")
     public ResponseEntity<ApiResponse> removeUserFromGroup(@PathVariable @Positive Long groupId, @PathVariable String username){
         User currentUser = getCurrentUser();
-        if (!groupService.isUserGroupOwner(groupId, currentUser)){
-            throw new ForbiddenOperationException("User is not group owner.");
-        }
         log.info("DELETE /groups/{}/members/{}: User {} removing member from group.", groupId,username, currentUser.getUsername());
-        groupService.removeUserFromGroup(groupId, username);
+        groupService.removeUserFromGroup(groupId, username, currentUser);
         log.debug("Success - DELETE /groups/{}/members/{}: User {} removed member from group.", groupId, username, currentUser.getUsername());
         return ResponseEntity.ok().body(new ApiResponse("Member removed from group successfully"));
     }

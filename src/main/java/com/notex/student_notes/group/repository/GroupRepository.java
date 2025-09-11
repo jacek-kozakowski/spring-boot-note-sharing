@@ -10,7 +10,11 @@ import java.util.Optional;
 public interface GroupRepository extends JpaRepository<Group, Long> {
     Optional<Group> findByName(String name);
     List<Group> findAllByOwner(User user);
-    List<Group> findByNameContaining(String namePart);
+    List<Group> findByNameContainingIgnoreCase(String namePart);
 
     boolean existsByName(String name);
+
+    boolean existsByIdAndMembersId(Long groupId, Long userId);
+    boolean existsByIdAndOwnerId(Long groupId, Long ownerId);
+    boolean existsByIdAndMembersUsername(Long groupId, String username);
 }

@@ -7,6 +7,7 @@ import com.notex.student_notes.group.dto.CreateGroupDto;
 import com.notex.student_notes.group.dto.GroupDto;
 import com.notex.student_notes.group.dto.JoinGroupRequestDto;
 import com.notex.student_notes.group.dto.UpdateGroupDto;
+import com.notex.student_notes.group.exceptions.UserNotGroupOwnerException;
 import com.notex.student_notes.group.model.Group;
 import com.notex.student_notes.group.service.GroupService;
 import com.notex.student_notes.user.model.User;
@@ -25,6 +26,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDateTime;
 
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -99,9 +101,6 @@ public class GroupControllerTests {
     @Test
     @WithMockUser(username = "testuser", roles = "USER")
     void updateGroup_ShouldUpdateGroup_WhenDataIsValid() throws Exception {
-        mockGroup.setPrivateGroup(false);
-        mockGroup.setPassword(null);
-
         UpdateGroupDto input = new UpdateGroupDto();
         input.setName("New name");
         input.setDescription("New description");
@@ -113,14 +112,13 @@ public class GroupControllerTests {
         response.setDescription("New description");
         response.setPrivate(true);
 
-        when(groupService.updateGroup(1L, input)).thenReturn(response);
+        when(groupService.updateGroup(1L, input, mockUser)).thenReturn(response);
         when(userService.getUserEntityByUsername(anyString())).thenReturn(mockUser);
-        when(groupService.isUserGroupOwner(anyLong(), any(User.class))).thenReturn(true);
 
         mockMvc.perform(patch("/groups/1")
-                .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(input)))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(input)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(1L))
@@ -134,30 +132,29 @@ public class GroupControllerTests {
     @Test
     @WithMockUser(username = "testuser", roles = "USER")
     void deleteGroup_ShouldReturnOk_WhenGroupExistsAndUserIsOwner() throws Exception {
-        mockGroup.setPrivateGroup(false);
-        mockGroup.setPassword(null);
-
         when(userService.getUserEntityByUsername(anyString())).thenReturn(mockUser);
-        when(groupService.isUserGroupOwner(anyLong(), any(User.class))).thenReturn(true);
 
         mockMvc.perform(delete("/groups/1")
-                .with(csrf()))
+                        .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value("Group deleted successfully"));
     }
 
     @Test
-    @WithMockUser(username = "testuser", roles = "USER")
-    void deleteGroup_ShouldReturnForbidden_WhenGroupExistsAndUserIsNotOwner() throws Exception {
-        mockGroup.setPrivateGroup(false);
-        mockGroup.setPassword(null);
+    @WithMockUser(username = "notowner", roles = "USER")
+    void deleteGroup_ShouldReturnForbidden_WhenUserIsNotOwner() throws Exception {
+        User notOwner = new User();
+        notOwner.setId(999L);
+        notOwner.setUsername("notowner");
 
-        when(userService.getUserEntityByUsername(anyString())).thenReturn(mockUser);
-        when(groupService.isUserGroupOwner(anyLong(), any(User.class))).thenReturn(false);
+        when(userService.getUserEntityByUsername("notowner")).thenReturn(notOwner);
+
+        doThrow(new UserNotGroupOwnerException("User is not a group owner"))
+                .when(groupService).deleteGroupById(1L, notOwner);
 
         mockMvc.perform(delete("/groups/1")
-                .with(csrf()))
+                        .with(csrf()))
                 .andExpect(status().isForbidden());
     }
 
@@ -169,7 +166,6 @@ public class GroupControllerTests {
         mockToAdd.setUsername("testuser2");
 
         when(userService.getUserEntityByUsername("testuser")).thenReturn(mockUser);
-        when(groupService.isUserGroupOwner(anyLong(), any(User.class))).thenReturn(true);
 
         mockMvc.perform(post("/groups/1/members/testuser2")
                 .with(csrf()))
@@ -179,17 +175,19 @@ public class GroupControllerTests {
     }
 
     @Test
-    @WithMockUser(username = "testuser", roles = "USER")
+    @WithMockUser(username = "notowner", roles = "USER")
     void addUserToGroup_ShouldReturnForbidden_WhenUserIsNotOwner() throws Exception {
-        User mockToAdd = new User();
-        mockToAdd.setId(2L);
-        mockToAdd.setUsername("testuser2");
+        User notOwner = new User();
+        notOwner.setId(999L);
+        notOwner.setUsername("notowner");
 
-        when(userService.getUserEntityByUsername("testuser")).thenReturn(mockUser);
-        when(groupService.isUserGroupOwner(anyLong(), any(User.class))).thenReturn(false);
+        when(userService.getUserEntityByUsername("notowner")).thenReturn(notOwner);
+
+        doThrow(new UserNotGroupOwnerException("User is not a group owner"))
+                .when(groupService).addUserToGroup(1L, "testuser2", notOwner);
 
         mockMvc.perform(post("/groups/1/members/testuser2")
-                .with(csrf()))
+                        .with(csrf()))
                 .andExpect(status().isForbidden());
     }
 
@@ -223,7 +221,6 @@ public class GroupControllerTests {
         mockGroup.addMember(userToRemove);
 
         when(userService.getUserEntityByUsername("testuser")).thenReturn(mockUser);
-        when(groupService.isUserGroupOwner(anyLong(), any(User.class))).thenReturn(true);
 
         mockMvc.perform(delete("/groups/1/members/testuser2")
                 .with(csrf()))
@@ -233,18 +230,19 @@ public class GroupControllerTests {
     }
 
     @Test
-    @WithMockUser(username = "testuser", roles = "USER")
+    @WithMockUser(username = "notowner", roles = "USER")
     void removeUserFromGroup_ShouldReturnForbidden_WhenUserIsNotOwner() throws Exception {
-        User userToRemove = new User();
-        userToRemove.setId(2L);
-        userToRemove.setUsername("testuser2");
-        mockGroup.addMember(userToRemove);
+        User notOwner = new User();
+        notOwner.setId(999L);
+        notOwner.setUsername("notowner");
 
-        when(userService.getUserEntityByUsername("testuser")).thenReturn(mockUser);
-        when(groupService.isUserGroupOwner(anyLong(), any(User.class))).thenReturn(false);
+        when(userService.getUserEntityByUsername("notowner")).thenReturn(notOwner);
+
+        doThrow(new UserNotGroupOwnerException("User is not a group owner"))
+                .when(groupService).removeUserFromGroup(1L, "testuser2", notOwner);
 
         mockMvc.perform(delete("/groups/1/members/testuser2")
-                .with(csrf()))
+                        .with(csrf()))
                 .andExpect(status().isForbidden());
     }
 

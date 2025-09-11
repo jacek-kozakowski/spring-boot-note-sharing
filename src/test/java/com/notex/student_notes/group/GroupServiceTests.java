@@ -53,7 +53,6 @@ public class GroupServiceTests {
         mockGroup.setPrivateGroup(true);
         mockGroup.setPassword("encodedPassword");
         mockGroup.setOwner(mockUser);
-        mockGroup.addMember(mockUser);
         mockGroup.setDeleted(false);
         mockGroup.setDeletedAt(null);
     }
@@ -127,11 +126,13 @@ public class GroupServiceTests {
 
     @Test
     void deleteGroup_ShouldDeleteGroup_WhenGroupFound(){
+        mockGroup.setOwner(mockUser);
 
         when(groupRepository.findById(1L)).thenReturn(Optional.of(mockGroup));
         when(groupRepository.save(any(Group.class))).thenAnswer(i->i.getArgument(0));
+        when(groupRepository.existsByIdAndOwnerId(anyLong(), anyLong())).thenReturn(true);
 
-        groupService.deleteGroupById(1L);
+        groupService.deleteGroupById(1L, mockUser);
 
         assertTrue(mockGroup.isDeleted());
         assertNotNull(mockGroup.getDeletedAt());
@@ -141,13 +142,15 @@ public class GroupServiceTests {
     }
 
     @Test
-    void deleteGroup_ShouldThrowException_WhenGroupAlreadyDeleted(){;
+    void deleteGroup_ShouldThrowException_WhenGroupAlreadyDeleted(){
+        mockGroup.setOwner(mockUser);
         mockGroup.setDeleted(true);
-        mockGroup.setDeletedAt(null);
+        mockGroup.setDeletedAt(LocalDateTime.now());
 
         when(groupRepository.findById(1L)).thenReturn(Optional.of(mockGroup));
+        when(groupRepository.existsByIdAndOwnerId(anyLong(), anyLong())).thenReturn(true);
 
-        GroupDeletedException ex = assertThrows(GroupDeletedException.class, ()->groupService.deleteGroupById(1L));
+        GroupDeletedException ex = assertThrows(GroupDeletedException.class, ()->groupService.deleteGroupById(1L, mockUser));
 
         assertEquals("Group was deleted", ex.getMessage());
 
@@ -169,9 +172,10 @@ public class GroupServiceTests {
 
         when(groupRepository.findById(1L)).thenReturn(Optional.of(mockGroup));
         when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
+        when(groupRepository.existsByIdAndOwnerId(anyLong(), anyLong())).thenReturn(true);
         when(groupRepository.save(any(Group.class))).thenAnswer(i->i.getArgument(0));
 
-        GroupDto response = groupService.updateGroup(1L, input);
+        GroupDto response = groupService.updateGroup(1L, input, mockUser);
 
         ArgumentCaptor<Group> groupCaptor = ArgumentCaptor.forClass(Group.class);
         verify(groupRepository).save(groupCaptor.capture());
@@ -194,7 +198,8 @@ public class GroupServiceTests {
     void updateGroup_ShouldThrowException_WhenRequestIsEmpty(){
         UpdateGroupDto input = new UpdateGroupDto();
 
-        InvalidGroupUpdateRequestException ex = assertThrows(InvalidGroupUpdateRequestException.class, ()->groupService.updateGroup(1L, input));
+        when(groupRepository.existsByIdAndOwnerId(anyLong(), anyLong())).thenReturn(true);
+        InvalidGroupUpdateRequestException ex = assertThrows(InvalidGroupUpdateRequestException.class, ()->groupService.updateGroup(1L, input, mockUser));
 
         assertEquals("Empty request. Can't update group.", ex.getMessage());
 
@@ -210,7 +215,8 @@ public class GroupServiceTests {
         input.setPassword("password123");
 
         when(groupRepository.findById(1L)).thenReturn(Optional.of(mockGroup));
-        InvalidGroupUpdateRequestException ex = assertThrows(InvalidGroupUpdateRequestException.class, ()->groupService.updateGroup(1L, input));
+        when(groupRepository.existsByIdAndOwnerId(anyLong(), anyLong())).thenReturn(true);
+        InvalidGroupUpdateRequestException ex = assertThrows(InvalidGroupUpdateRequestException.class, ()->groupService.updateGroup(1L, input, mockUser));
         assertEquals("Group is already private", ex.getMessage());
 
         verify(groupRepository, times(1)).findById(1L);
@@ -227,7 +233,8 @@ public class GroupServiceTests {
         input.setPrivateGroup(true);
 
         when(groupRepository.findById(1L)).thenReturn(Optional.of(mockGroup));
-        InvalidGroupUpdateRequestException ex = assertThrows(InvalidGroupUpdateRequestException.class, ()->groupService.updateGroup(1L, input));
+        when(groupRepository.existsByIdAndOwnerId(anyLong(), anyLong())).thenReturn(true);
+        InvalidGroupUpdateRequestException ex = assertThrows(InvalidGroupUpdateRequestException.class, ()->groupService.updateGroup(1L, input, mockUser));
         assertEquals("Can't set group to private without password", ex.getMessage());
 
         verify(groupRepository, times(1)).findById(1L);
@@ -244,8 +251,9 @@ public class GroupServiceTests {
         input.setPassword("password123");
 
         when(groupRepository.findById(1L)).thenReturn(Optional.empty());
+        when(groupRepository.existsByIdAndOwnerId(anyLong(), anyLong())).thenReturn(true);
 
-        GroupNotFoundException ex = assertThrows(GroupNotFoundException.class, ()-> groupService.updateGroup(1L, input));
+        GroupNotFoundException ex = assertThrows(GroupNotFoundException.class, ()-> groupService.updateGroup(1L, input, mockUser));
 
         assertEquals("Group not found", ex.getMessage());
 
@@ -266,7 +274,8 @@ public class GroupServiceTests {
         input.setPassword("password123");
 
         when(groupRepository.findById(1L)).thenReturn(Optional.of(mockGroup));
-        GroupDeletedException ex = assertThrows(GroupDeletedException.class, ()-> groupService.updateGroup(1L, input));
+        when(groupRepository.existsByIdAndOwnerId(anyLong(), anyLong())).thenReturn(true);
+        GroupDeletedException ex = assertThrows(GroupDeletedException.class, ()-> groupService.updateGroup(1L, input, mockUser));
 
         assertEquals("Group was deleted", ex.getMessage());
         verify(groupRepository, times(1)).findById(1L);
@@ -299,12 +308,12 @@ public class GroupServiceTests {
         User userToAdd = new User();
         userToAdd.setUsername("userToAdd");
 
+        when(groupRepository.existsByIdAndOwnerId(anyLong(), anyLong())).thenReturn(true);
         when(groupRepository.findById(1L)).thenReturn(Optional.of(mockGroup));
         when(userRepository.findByUsername(anyString())).thenReturn(Optional.of(userToAdd));
 
-        groupService.addUserToGroup(1L, "userToAdd");
+        groupService.addUserToGroup(1L, "userToAdd", mockUser);
         assertEquals(2, mockGroup.getMembers().size());
-        verify(groupRepository, times(2)).findById(1L);
         verify(userRepository, times(1)).findByUsername(anyString());
         verify(groupRepository, times(1)).save(any(Group.class));
     }
@@ -317,10 +326,11 @@ public class GroupServiceTests {
         mockGroup.addMember(userToRemove);
 
         when(groupRepository.findById(1L)).thenReturn(Optional.of(mockGroup));
+        when(groupRepository.existsByIdAndOwnerId(anyLong(), anyLong())).thenReturn(true);
         when(userRepository.findByUsername(anyString())).thenReturn(Optional.of(userToRemove));
         when(groupRepository.save(any(Group.class))).thenAnswer(i->i.getArgument(0));
 
-        groupService.removeUserFromGroup(1L, "usertoremove");
+        groupService.removeUserFromGroup(1L, "usertoremove", mockUser);
         assertEquals(1, mockGroup.getMembers().size());
         verify(groupRepository, times(1)).findById(1L);
         verify(userRepository, times(1)).findByUsername(anyString());
@@ -335,6 +345,7 @@ public class GroupServiceTests {
         mockGroup.addMember(leavingUser);
 
         when(groupRepository.findById(1L)).thenReturn(Optional.of(mockGroup));
+        when(groupRepository.existsByIdAndMembersId(anyLong(), anyLong())).thenReturn(true);
         when(groupRepository.save(any(Group.class))).thenAnswer(i->i.getArgument(0));
 
         groupService.leaveGroup(1L, leavingUser);

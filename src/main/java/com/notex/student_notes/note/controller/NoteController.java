@@ -14,6 +14,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 
 @RestController
 @RequestMapping("/notes")
@@ -30,6 +32,14 @@ public class NoteController {
         NoteDto note = noteService.getNoteById(noteId);
         ResponseEntity<NoteDto> response = ResponseEntity.ok(note);
         log.debug("Success - GET /notes/{}: Fetched note.", noteId);
+        return response;
+    }
+    @GetMapping
+    public ResponseEntity<List<NoteDto>> getNotesByPartialName(@RequestParam(required = false) String partialName){
+        log.info("GET /notes?name={}: Fetching notes.", partialName);
+        List<NoteDto> notes = noteService.getNotesByPartialName(partialName);
+        ResponseEntity<List<NoteDto>> response = ResponseEntity.ok(notes);
+        log.debug("Success - GET /notes?name={}: Fetched notes.", partialName);
         return response;
     }
 
