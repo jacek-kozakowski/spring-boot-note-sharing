@@ -5,7 +5,11 @@ import com.notex.student_notes.auth.service.AuthService;
 import com.notex.student_notes.group.repository.GroupRepository;
 import com.notex.student_notes.group.service.GroupService;
 import com.notex.student_notes.message.service.MessageService;
+import com.notex.student_notes.note.repository.NoteRepository;
 import com.notex.student_notes.note.service.NoteService;
+import com.notex.student_notes.upload.repository.UploadTaskRepository;
+import com.notex.student_notes.upload.service.AsyncUploadService;
+import com.notex.student_notes.upload.service.UploadService;
 import com.notex.student_notes.user.dto.AdminViewUserDto;
 import com.notex.student_notes.user.dto.UpdateUserDto;
 import com.notex.student_notes.user.dto.UserDto;
@@ -13,6 +17,7 @@ import com.notex.student_notes.user.model.Role;
 import com.notex.student_notes.user.model.User;
 import com.notex.student_notes.user.repository.UserRepository;
 import com.notex.student_notes.user.service.UserService;
+import io.minio.messages.Upload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,6 +63,18 @@ public class UserControllerTests {
 
     @MockitoBean
     private GroupRepository groupRepository;
+
+    @MockitoBean
+    private AsyncUploadService asyncUploadService;
+
+    @MockitoBean
+    private UploadTaskRepository uploadTaskRepository;
+
+    @MockitoBean
+    private NoteRepository noteRepository;
+
+    @MockitoBean
+    private UploadService uploadService;
 
     @MockitoBean
     private GroupService groupService;

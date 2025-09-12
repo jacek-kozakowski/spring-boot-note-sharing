@@ -158,7 +158,6 @@ public class GroupServiceTests {
         verify(groupRepository, never()).save(any(Group.class));
     }
 
-    // TODO updateGroupTests
     @Test
     void updateGroup_ShouldUpdateGroup_WhenGroupFound(){
         mockGroup.setPrivateGroup(false);
@@ -353,4 +352,5 @@ public class GroupServiceTests {
         assertEquals(1, mockGroup.getMembers().size());
         verify(groupRepository, times(1)).save(any(Group.class));
     }
+
 }

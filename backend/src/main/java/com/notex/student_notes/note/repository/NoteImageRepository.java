@@ -11,4 +11,5 @@ import java.util.List;
 public interface NoteImageRepository extends JpaRepository<NoteImage, Long> {
     void deleteByNote(Note note);
     List<NoteImage> findAllByNote(Note note);
+    List<NoteImage> findByNote_IdOrderByIndexDesc(Long noteId);
 }

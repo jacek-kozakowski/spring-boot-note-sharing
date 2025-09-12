@@ -89,6 +89,7 @@ public class NoteController {
         return ResponseEntity.ok().body("Note image successfully deleted");
     }
 
+
     private User getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return noteService.getUser(auth.getName());
