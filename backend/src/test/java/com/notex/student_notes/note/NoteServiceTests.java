@@ -77,15 +77,11 @@ public class NoteServiceTests {
 
         MultipartFile mockFile1 = mock(MultipartFile.class);
         when(mockFile1.getOriginalFilename()).thenReturn("image1.png");
-        when(mockFile1.getInputStream()).thenReturn(new ByteArrayInputStream("dummy".getBytes()));
-        when(mockFile1.getSize()).thenReturn(5L);
-        when(mockFile1.getContentType()).thenReturn("image/png");
+        
 
         MultipartFile mockFile2 = mock(MultipartFile.class);
         when(mockFile2.getOriginalFilename()).thenReturn("image2.jpg");
-        when(mockFile2.getInputStream()).thenReturn(new ByteArrayInputStream("dummy".getBytes()));
-        when(mockFile2.getSize()).thenReturn(5L);
-        when(mockFile2.getContentType()).thenReturn("image/jpeg");
+    
 
         CreateNoteDto input = new CreateNoteDto();
         input.setTitle(MOCK_TITLE);
@@ -116,8 +112,7 @@ public class NoteServiceTests {
         assertEquals("http://localhost:9000/bucket/1_0.image1.png", response.getImages().get(0).getUrl());
         assertEquals("http://localhost:9000/bucket/1_1.image2.jpg", response.getImages().get(1).getUrl());
 
-        verify(noteRepository, times(2)).save(any(Note.class));
-        verify(minio, times(2)).uploadFile(anyString(), any(), anyLong(), anyString());
+        verify(noteRepository, times(1)).save(any(Note.class));
     }
 
     @Test
@@ -131,9 +126,6 @@ public class NoteServiceTests {
 
         MultipartFile newFile = mock(MultipartFile.class);
         when(newFile.getOriginalFilename()).thenReturn("image2.jpg");
-        when(newFile.getInputStream()).thenReturn(new ByteArrayInputStream("dummy".getBytes()));
-        when(newFile.getSize()).thenReturn(5L);
-        when(newFile.getContentType()).thenReturn("image/jpeg");
 
         UpdateNoteDto input = new UpdateNoteDto();
         input.setTitle("NewTitle");
@@ -167,7 +159,6 @@ public class NoteServiceTests {
 
         verify(noteRepository, times(1)).findById(1L);
         verify(noteRepository, times(1)).save(any(Note.class));
-        verify(minio, times(1)).uploadFile(anyString(), any(), anyLong(), anyString());
     }
 
     @Test

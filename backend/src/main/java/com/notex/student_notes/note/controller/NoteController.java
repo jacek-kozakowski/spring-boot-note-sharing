@@ -36,10 +36,10 @@ public class NoteController {
     }
     @GetMapping
     public ResponseEntity<List<NoteDto>> getNotesByPartialName(@RequestParam(required = false) String partialName){
-        log.info("GET /notes?name={}: Fetching notes.", partialName);
+        log.info("GET /notes?partialName={}: Fetching notes.", partialName);
         List<NoteDto> notes = noteService.getNotesByPartialName(partialName);
         ResponseEntity<List<NoteDto>> response = ResponseEntity.ok(notes);
-        log.debug("Success - GET /notes?name={}: Fetched notes.", partialName);
+        log.debug("Success - GET /notes?partialName={}: Fetched notes.", partialName);
         return response;
     }
 
