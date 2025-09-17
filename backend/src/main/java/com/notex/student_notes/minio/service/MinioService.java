@@ -2,6 +2,7 @@ package com.notex.student_notes.minio.service;
 
 import com.notex.student_notes.note.exceptions.NoteImageUploadException;
 import io.minio.*;
+import io.minio.http.Method;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -98,6 +99,20 @@ public class MinioService {
     }
 
     public String getFileUrl(String filename){
-        return url +"/" + bucketName + "/" + filename;
+        try {
+            // Generate presigned URL valid for 7 days
+            return minioClient.getPresignedObjectUrl(
+                GetPresignedObjectUrlArgs.builder()
+                    .method(Method.GET)
+                    .bucket(bucketName)
+                    .object(filename)
+                    .expiry(7 * 24 * 60 * 60) // 7 days
+                    .build()
+            );
+        } catch (Exception e) {
+            log.error("Error generating presigned URL for file: {}", filename, e);
+            // Fallback to direct URL
+            return url + "/" + bucketName + "/" + filename;
+        }
     }
 }

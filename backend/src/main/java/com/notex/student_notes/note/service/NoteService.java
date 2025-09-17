@@ -232,15 +232,6 @@ public class NoteService {
         noteToUpdate.removeImage(noteImage);
     }
 
-    private void addNoteImage(Note note, int i, MultipartFile file) throws Exception {
-        String filename = note.getId() + "_" + i + "_"+ UUID.randomUUID()+ "." + file.getOriginalFilename();
-        minioService.uploadFile(filename, file.getInputStream(), file.getSize(), file.getContentType());
-        NoteImage noteImage = new NoteImage();
-        noteImage.setIndex(i);
-        noteImage.setNote(note);
-        noteImage.setFilename(filename);
-        note.addImage(noteImage);
-    }
 
     private void normalizeImageIndexes(Note note){
         List<NoteImage> images = note.getImages()

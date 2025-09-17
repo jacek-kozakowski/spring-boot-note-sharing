@@ -1,5 +1,5 @@
 import axios from 'axios';
-import {registerUserDto, loginUserDto, verifyUserDto, resendVerificationDto, updateUserDto} from '../types/user'
+import type { registerUserDto, loginUserDto, verifyUserDto, resendVerificationDto, updateUserDto } from '../types/user';
 
 const API_BASE_URL: string = 'http://localhost:8080';
 
@@ -57,29 +57,34 @@ export const notexAPI = {
     },
 
     notes: {
-        getNoteById: (noteId: bigint) => api.get(`/notes/${noteId}`),
-        getNoteByPartialName: (partialName: string) => api.get(`/notes`, {params: {partialName}}),
-        createNote: (createNoteDto:any) => api.post('/notes', createNoteDto, {headers: {'Content-Type': 'multipart/form-data'}}),
-        updateNote: (noteId: bigint, updateNoteDto:any)=> api.patch(`/notes/${noteId}`, updateNoteDto, {headers: {'Content-Type': 'multipart/form-data'}}),
-        deleteNote: (noteId: bigint) => api.delete(`/notes/${noteId}`),
-        deleteNoteImage: (noteId: bigint, imageId: bigint) => api.delete(`/notes/${noteId}/images/${imageId}`)
+        getNoteById: (noteId: number | string) => api.get(`/notes/${noteId}`),
+        getNotesByPartialName: (partialName: string) => api.get(`/notes`, {params: {partialName}}),
+        createNote: (createNoteDto: FormData) => api.post('/notes', createNoteDto, {headers: {'Content-Type': 'multipart/form-data'}}),
+        updateNote: (noteId: number | string, updateNoteDto: FormData) => api.patch(`/notes/${noteId}`, updateNoteDto, {headers: {'Content-Type': 'multipart/form-data'}}),
+        deleteNote: (noteId: number | string) => api.delete(`/notes/${noteId}`),
+        deleteNoteImage: (noteId: number | string, imageId: number | string) => api.delete(`/notes/${noteId}/images/${imageId}`),
+        getMyNotes: () => api.get('/users/me/notes'),
+        search: (params: { query: string, filter?: string }) => api.get('/notes/search', { params }),
     },
 
     groups: {
         getGroupsByName: (name: string) => api.get(`/groups`, {params: {name}}),
-        getGroupById: (groupId: bigint) => api.get(`/groups/${groupId}`),
+        getGroupsByOwner: (owner: string) => api.get(`/groups`, {params: {owner}}),
+        getMyGroups: () => api.get('/users/me/groups'),
+        getGroupById: (groupId: number) => api.get(`/groups/${groupId}`),
+        getGroupMembers: (groupId: number) => api.get(`/groups/${groupId}/members`),
         createGroup: (createGroupDto:any) => api.post('/groups', createGroupDto),
-        updateGroup: (groupId: bigint, updateGroupDto:any) => api.patch(`/groups/${groupId}`, updateGroupDto),
-        deleteGroup: (groupId: bigint)=> api.delete(`/groups/${groupId}`),
-        addUserToGroup: (groupId: bigint, username: string) => api.post(`/groups/${groupId}/members/${username}`),
-        joinGroup: (groupId: bigint, joinGroupRequestDto: any) => api.post(`/groups/${groupId}/members`, joinGroupRequestDto),
-        removeUserFromGroup: (groupId: bigint, username: string) => api.delete(`/groups/${groupId}/members/${username}`),
-        leaveGroup: (groupId: bigint) => api.delete(`/groups/${groupId}/members/me`)
+        updateGroup: (groupId: number, updateGroupDto:any) => api.patch(`/groups/${groupId}`, updateGroupDto),
+        deleteGroup: (groupId: number)=> api.delete(`/groups/${groupId}`),
+        addUserToGroup: (groupId: number, username: string) => api.post(`/groups/${groupId}/members/${username}`),
+        joinGroup: (groupId: number, joinGroupRequestDto: any) => api.post(`/groups/${groupId}/members`, joinGroupRequestDto),
+        removeUserFromGroup: (groupId: number, username: string) => api.delete(`/groups/${groupId}/members/${username}`),
+        leaveGroup: (groupId: number) => api.delete(`/groups/${groupId}/members/me`)
     },
 
     messages: {
-        getMessages: (groupId: bigint, page: number, pageSize: number) => api.get(`/groups/${groupId}/messages`, {params: {page, pageSize}}),
-        sendMessage: (groupID: bigint, sendMessageDto: any) => api.post(`/groups/${groupID}/messages`, sendMessageDto)
+        getMessages: (groupId: number, page: number, pageSize: number) => api.get(`/groups/${groupId}/messages`, {params: {page, size: pageSize}}),
+        sendMessage: (groupId: number, sendMessageDto: { content: string }) => api.post(`/groups/${groupId}/messages`, { ...sendMessageDto, groupId })
     }
 }
 

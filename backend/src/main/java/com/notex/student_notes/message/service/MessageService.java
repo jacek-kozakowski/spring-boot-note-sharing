@@ -1,6 +1,7 @@
 package com.notex.student_notes.message.service;
 
 
+import com.notex.student_notes.group.exceptions.GroupDeletedException;
 import com.notex.student_notes.group.exceptions.GroupNotFoundException;
 import com.notex.student_notes.group.exceptions.UserNotInGroupException;
 import com.notex.student_notes.group.model.Group;
@@ -27,7 +28,7 @@ public class MessageService {
 
     public Page<MessageDto> getMessagesByGroupId(Long groupId, User currentUser, Pageable pageable){
         log.info("Fetching messages for group {}", groupId);
-        if (!isUserInGroup(findGroupById(groupId), currentUser)){
+        if (UserNotInGroup(findGroupById(groupId), currentUser)){
             log.warn("Fail - User {} is not in group {}", currentUser.getUsername(), groupId);
             throw new UserNotInGroupException("User is not in group");
         }
@@ -40,7 +41,11 @@ public class MessageService {
     public MessageDto sendMessage(SendMessageDto message, User sender){
         log.info("Sending message {} to group {}", message.getContent(), message.getGroupId());
         Group receivingGroup = findGroupById(message.getGroupId());
-        if (!isUserInGroup(receivingGroup, sender)){
+        if (receivingGroup.isDeleted()){
+            log.warn("Fail - Group {} is deleted", message.getGroupId());
+            throw new GroupDeletedException("Group was deleted");
+        }
+        if (UserNotInGroup(receivingGroup, sender)){
             log.warn("Fail - User {} is not in group {}", sender.getUsername(), message.getGroupId());
             throw new UserNotInGroupException("User is not in group");
         }
@@ -56,7 +61,8 @@ public class MessageService {
             return new GroupNotFoundException("Group not found");
         });
     }
-    private boolean isUserInGroup(Group group, User user){
-        return groupRepository.existsByIdAndMembersId(group.getId(), user.getId());
+    private boolean UserNotInGroup(Group group, User user){
+        return !groupRepository.existsByIdAndMembersId(group.getId(), user.getId()) &&
+                !groupRepository.existsByIdAndOwnerId(group.getId(), user.getId());
     }
 }

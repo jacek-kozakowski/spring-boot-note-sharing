@@ -1,5 +1,6 @@
 package com.notex.student_notes.group.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.notex.student_notes.group.model.Group;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,15 +16,31 @@ public class GroupDto {
     private String name;
     private String description;
     private String ownerUsername;
+    private int membersCount;
     private LocalDateTime createdAt;
     private boolean isPrivate;
+    @JsonProperty("isMember")
+    private boolean isMember;
 
     public GroupDto(Group group){
         this.id = group.getId();
         this.name = group.getName();
         this.description = group.getDescription();
         this.ownerUsername = group.getOwner().getUsername();
+        this.membersCount = group.getMembers().size();
         this.createdAt = group.getCreatedAt();
         this.isPrivate = group.isPrivateGroup();
+        this.isMember = false;
+    }
+
+    public GroupDto(Group group, boolean isMember){
+        this.id = group.getId();
+        this.name = group.getName();
+        this.description = group.getDescription();
+        this.ownerUsername = group.getOwner().getUsername();
+        this.membersCount = group.getMembers().size();
+        this.createdAt = group.getCreatedAt();
+        this.isPrivate = group.isPrivateGroup();
+        this.isMember = isMember;
     }
 }

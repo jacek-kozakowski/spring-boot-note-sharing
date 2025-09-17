@@ -15,7 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -39,11 +41,55 @@ public class GroupService {
         return groups.stream().filter(g -> !g.isDeleted()).map(GroupDto::new).toList();
     }
 
+    public List<GroupDto> getGroupsByPartialName(String partialName, User currentUser){
+        log.info("Fetching groups with partial name {} for user {}", partialName, currentUser.getUsername());
+        List<Group> groups = groupRepository.findByNameContainingIgnoreCase(partialName);
+        log.debug("Success - Fetched {} groups with partial name {}", groups.size(), partialName);
+        return groups.stream()
+                .filter(g -> !g.isDeleted())
+                .map(g -> new GroupDto(g, isUserInGroup(g.getId(), currentUser)))
+                .toList();
+    }
+
     public List<GroupDto> getAllGroupsByUser(User user){
         log.info("Fetching all groups for user {}", user.getUsername());
         List<Group> userGroups = groupRepository.findAllByOwner(user);
         log.debug("Success - Fetched {} groups for user {}", userGroups.size(), user.getUsername());
         return userGroups.stream().filter(g -> !g.isDeleted()).map(GroupDto::new).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<GroupDto> getUserGroups(User user){
+        log.info("Fetching user groups for {}", user.getUsername());
+
+        List<Group> ownedGroups = groupRepository.findAllByOwner(user);
+        List<Group> memberGroups = groupRepository.findAllByMembersId(user.getId());
+        
+        log.debug("Found {} owned groups and {} member groups for user {}", 
+                 ownedGroups.size(), memberGroups.size(), user.getUsername());
+        
+        Set<Group> allGroups = new HashSet<>(ownedGroups);
+        allGroups.addAll(memberGroups);
+        
+        log.debug("Success - Fetched {} groups for user {}", allGroups.size(), user.getUsername());
+
+        return allGroups.stream()
+                .filter(g -> !g.isDeleted())
+                .map(g -> new GroupDto(g, true))
+                .toList();
+    }
+
+
+    public List<GroupDto> getGroupsByOwner(String ownerUsername, User currentUser){
+        log.info("Fetching groups by owner {} for user {}", ownerUsername, currentUser.getUsername());
+        User owner = userRepository.findByUsername(ownerUsername)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        List<Group> ownerGroups = groupRepository.findAllByOwner(owner);
+        log.debug("Success - Fetched {} groups by owner {}", ownerGroups.size(), ownerUsername);
+        return ownerGroups.stream()
+                .filter(g -> !g.isDeleted())
+                .map(g -> new GroupDto(g, isUserInGroup(g.getId(), currentUser)))
+                .toList();
     }
 
     public List<UserDto> getUsersInGroup(Long groupId, User currentUser){
@@ -194,14 +240,15 @@ public class GroupService {
     @Transactional
     public void addUserToGroup(Long groupId, String username, User currentUser){
         if (!isUserGroupOwner(groupId, currentUser)){
-            throw new UserNotGroupOwnerException("User is not a group owner");
+            throw new UserNotGroupOwnerException("User is not group owner");
         }
         Group group = findGroupById(groupId);
-        User userToAdd = userRepository.findByUsername(username).orElseThrow(()->{
-            log.warn("User with username: {} not found", username);
-            return new UserNotFoundException("User not found");
-        });
-        if (isUserInGroup(groupId, username)){
+        if (group.isDeleted()){
+            log.warn("Fail - Group {} is deleted", groupId);
+            throw new GroupDeletedException("Group was deleted");
+        }
+        User userToAdd = getUserByUsername(username);
+        if (isUserInGroup(groupId, userToAdd)){
             log.warn("User {} is already in group {}", username, groupId);
             throw new UserAlreadyInGroupException("User is already in group");
         }
@@ -217,14 +264,20 @@ public class GroupService {
         }
         log.info("Removing user {} from group {}", username, groupId);
         Group group = findGroupById(groupId);
-        User userToRemove = userRepository.findByUsername(username).orElseThrow(()->{
-            log.warn("User with username: {} not found", username);
-            return new UserNotFoundException("User not found");
-        });
+        if (group.isDeleted()){
+            log.warn("Fail - Group {} is deleted", groupId);
+            throw new GroupDeletedException("Group was deleted");
+        }
+        User userToRemove = getUserByUsername(username);
+        if (!isUserInGroup(groupId, userToRemove)){
+            log.warn("User {} is not in group {}", username, groupId);
+            throw new UserNotInGroupException("User is not in group");
+        }
         group.removeMember(userToRemove);
         groupRepository.save(group);
         log.debug("Success - User {} removed from group {}", username, groupId);
     }
+
 
     @Transactional
     public void leaveGroup(Long groupId, User user){
@@ -249,12 +302,9 @@ public class GroupService {
     }
 
 
-    private boolean isUserInGroup(Long groupId, String username){
-        return groupRepository.existsByIdAndMembersUsername(groupId, username);
-    }
-
     private boolean isUserInGroup(Long groupId, User user){
-        return groupRepository.existsByIdAndMembersId(groupId, user.getId());
+        return groupRepository.existsByIdAndMembersId(groupId, user.getId()) || 
+               groupRepository.existsByIdAndOwnerId(groupId, user.getId());
     }
 
     private boolean isUserGroupOwner(Long groupId, User user){
@@ -265,6 +315,13 @@ public class GroupService {
         return groupRepository.findById(id).orElseThrow(()->{
             log.warn("Group with id: {} not found", id);
             return new GroupNotFoundException("Group not found");
+        });
+    }
+
+    private User getUserByUsername(String username) {
+        return userRepository.findByUsername(username).orElseThrow(() -> {
+            log.warn("User with username: {} not found", username);
+            return new UserNotFoundException("User not found");
         });
     }
 }

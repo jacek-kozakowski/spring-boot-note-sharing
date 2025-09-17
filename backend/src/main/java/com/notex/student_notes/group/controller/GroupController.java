@@ -29,12 +29,24 @@ public class GroupController {
     private final UserService userService;
 
     @GetMapping
-    public ResponseEntity<List<GroupDto>> getGroupsByName(@RequestParam String name){
-        log.info("GET /groups?name={}: Fetching group.", name);
-        List<GroupDto> group = groupService.getGroupsByPartialName(name);
-        log.debug("Success - GET /groups?name={}: Fetched group.", name);
-        return ResponseEntity.ok(group);
+    public ResponseEntity<List<GroupDto>> getGroupsByName(@RequestParam(required = false) String name, @RequestParam(required = false) String owner){
+        User currentUser = getCurrentUser();
+        if (owner != null) {
+            log.info("GET /groups?owner={}: Fetching groups by owner.", owner);
+            List<GroupDto> groups = groupService.getGroupsByOwner(owner, currentUser);
+            log.debug("Success - GET /groups?owner={}: Fetched groups by owner.", owner);
+            return ResponseEntity.ok(groups);
+        } else if (name != null) {
+            log.info("GET /groups?name={}: Fetching group.", name);
+            List<GroupDto> group = groupService.getGroupsByPartialName(name, currentUser);
+            log.debug("Success - GET /groups?name={}: Fetched group.", name);
+            return ResponseEntity.ok(group);
+        } else {
+            log.warn("GET /groups: No search parameters provided.");
+            return ResponseEntity.badRequest().build();
+        }
     }
+
 
     @GetMapping("/{groupId}")
     public ResponseEntity<GroupDto> getGroupById(@PathVariable Long groupId){

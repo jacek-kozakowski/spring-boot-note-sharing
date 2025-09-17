@@ -1,7 +1,7 @@
 export interface registerUserDto {
     username: string;
-    password: string;
     email: string;
+    password: string;
     firstName: string;
     lastName: string;
 }
@@ -21,9 +21,8 @@ export interface resendVerificationDto {
 }
 
 export interface updateUserDto {
-    username: string;
-    password: string;
-    email: string;
-    firstName: string;
-    lastName: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
 }
+

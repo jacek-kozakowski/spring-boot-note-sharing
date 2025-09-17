@@ -17,4 +17,6 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
     boolean existsByIdAndMembersId(Long groupId, Long userId);
     boolean existsByIdAndOwnerId(Long groupId, Long ownerId);
     boolean existsByIdAndMembersUsername(Long groupId, String username);
+    
+    List<Group> findAllByMembersId(Long userId);
 }

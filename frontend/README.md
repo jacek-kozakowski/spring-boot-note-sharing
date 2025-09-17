@@ -1,69 +1,177 @@
-# React + TypeScript + Vite
+# Notex Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A comprehensive React TypeScript frontend for the Notex student notes application.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### 🔐 Authentication
+- User registration with email verification
+- Secure login/logout functionality
+- Protected routes and authorization
 
-## Expanding the ESLint configuration
+### 📝 Note Management
+- **Create Notes**: Rich text editor with image upload support
+- **View Notes**: Detailed note view with image gallery
+- **Edit Notes**: Full editing capabilities with image management
+- **Delete Notes**: Safe deletion with confirmation dialogs
+- **Search Notes**: Search through all notes by title
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 🖼️ Image Management
+- Upload multiple images per note
+- Image preview and management
+- Delete individual images
+- Support for common image formats (PNG, JPG, etc.)
+- 10MB file size limit per image
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### 🎨 Modern UI/UX
+- Material-UI components for consistent design
+- Responsive layout for all screen sizes
+- Dark/light theme support
+- Intuitive navigation and user experience
+- Loading states and error handling
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+### 🔍 Search & Discovery
+- Search all notes by title
+- Filter by user notes vs. all notes
+- Real-time search results
+- Clear search functionality
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Technology Stack
+
+- **React 19** with TypeScript
+- **Material-UI (MUI)** for components
+- **React Router** for navigation
+- **Axios** for API communication
+- **Vite** for build tooling
+
+## Getting Started
+
+### Prerequisites
+- Node.js 18+ 
+- npm or yarn
+- Backend API running on http://localhost:8080
+
+### Installation
+
+1. Install dependencies:
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+2. Start development server:
+```bash
+npm run dev
 ```
+
+3. Open http://localhost:5173 in your browser
+
+### Building for Production
+
+```bash
+npm run build
+```
+
+## Project Structure
+
+```
+src/
+├── components/          # React components
+│   ├── Dashboard.tsx    # Main dashboard with notes list
+│   ├── Login.tsx        # Login form
+│   ├── Register.tsx     # Registration form
+│   ├── Navigation.tsx   # Top navigation bar
+│   ├── CreateNote.tsx   # Note creation form
+│   ├── EditNote.tsx     # Note editing form
+│   └── NoteDetail.tsx   # Note detail view
+├── context/             # React context providers
+│   └── AuthContext.tsx  # Authentication context
+├── services/            # API services
+│   └── api.ts          # API client configuration
+├── types/               # TypeScript type definitions
+│   ├── user.ts         # User-related types
+│   └── note.ts         # Note-related types
+├── App.tsx             # Main app component
+└── main.tsx           # App entry point
+```
+
+## Key Features Explained
+
+### Dashboard
+- Displays user's notes in a responsive grid
+- Search functionality to find notes by title
+- Quick actions: view, edit, delete
+- Floating action button for creating new notes
+
+### Note Creation/Editing
+- Rich text input with validation
+- Multiple image upload with preview
+- Form validation and error handling
+- Responsive design for all devices
+
+### Image Management
+- Drag & drop or click to upload
+- Image preview before upload
+- Individual image deletion
+- Support for common image formats
+
+### Search
+- Real-time search as you type
+- Search across all notes (not just user's)
+- Clear search functionality
+- URL-based search state
+
+## API Integration
+
+The frontend integrates with the backend API through:
+- RESTful endpoints for CRUD operations
+- JWT token authentication
+- Multipart form data for file uploads
+- Error handling and user feedback
+
+## Responsive Design
+
+- Mobile-first approach
+- Breakpoints for tablet and desktop
+- Touch-friendly interface
+- Optimized for all screen sizes
+
+## Error Handling
+
+- Comprehensive error messages
+- Loading states for better UX
+- Form validation
+- Network error handling
+- User-friendly error dialogs
+
+## Security
+
+- JWT token management
+- Protected routes
+- Input validation
+- Secure file upload handling
+
+## Development
+
+### Code Style
+- TypeScript for type safety
+- ESLint for code quality
+- Consistent component structure
+- Proper error handling
+
+### Performance
+- Lazy loading where appropriate
+- Optimized re-renders
+- Efficient state management
+- Image optimization
+
+## Contributing
+
+1. Follow TypeScript best practices
+2. Use Material-UI components consistently
+3. Write responsive components
+4. Include proper error handling
+5. Add loading states for async operations
+
+## License
+
+This project is part of the Notex student notes application.

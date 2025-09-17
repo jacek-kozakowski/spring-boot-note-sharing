@@ -61,7 +61,7 @@ public class UserController {
     public ResponseEntity<List<GroupDto>> getAllGroups(){
         User currentUser = getCurrentUser();
         log.info("GET /users/me/groups: User {} fetching all groups", currentUser.getUsername());
-        List<GroupDto> groups = groupService.getAllGroupsByUser(currentUser);
+        List<GroupDto> groups = groupService.getUserGroups(currentUser);
         log.debug("Success - GET /users/me/groups: User {} fetched all groups", currentUser.getUsername());
         return ResponseEntity.ok(groups);
     }
