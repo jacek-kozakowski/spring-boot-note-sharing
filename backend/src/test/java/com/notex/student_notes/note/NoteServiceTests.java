@@ -9,12 +9,14 @@ import com.notex.student_notes.note.dto.NoteImageDto;
 import com.notex.student_notes.note.dto.UpdateNoteDto;
 import com.notex.student_notes.note.exceptions.NoteDeletedException;
 import com.notex.student_notes.note.exceptions.NoteNotFoundException;
+import com.notex.student_notes.note.exceptions.UserNotNoteOwner;
 import com.notex.student_notes.note.mapper.NoteMapper;
 import com.notex.student_notes.note.model.Note;
 import com.notex.student_notes.note.model.NoteImage;
 import com.notex.student_notes.note.repository.NoteImageRepository;
 import com.notex.student_notes.note.repository.NoteRepository;
 import com.notex.student_notes.note.service.NoteService;
+import com.notex.student_notes.upload.service.UploadService;
 import com.notex.student_notes.user.model.User;
 import com.notex.student_notes.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,6 +48,8 @@ public class NoteServiceTests {
     private MinioService minio;
     @Mock
     private NoteImageRepository noteImageRepository;
+    @Mock
+    private UploadService uploadService;
 
     @InjectMocks
     private NoteService noteService;
@@ -143,10 +147,11 @@ public class NoteServiceTests {
         ));
 
         when(noteRepository.findById(1L)).thenReturn(Optional.of(mockNote));
+        when(noteRepository.existsByIdAndOwnerId(1L, mockUser.getId())).thenReturn(true);
         when(noteMapper.toDto(any(Note.class))).thenReturn(mockResponse);
         when(noteRepository.save(any(Note.class))).thenAnswer(i -> i.getArgument(0));
 
-        NoteDto response = noteService.updateNote(1L, input);
+        NoteDto response = noteService.updateNote(1L, input, mockUser);
 
         assertEquals("NewTitle", response.getTitle());
         assertEquals("New note content", response.getContent());
@@ -161,13 +166,14 @@ public class NoteServiceTests {
     }
 
     @Test
-    void updateUser_ShouldThrowException_WhenNoteNotFound(){
+    void updateNote_ShouldThrowException_WhenNoteNotFound(){
         UpdateNoteDto input = new UpdateNoteDto();
         input.setTitle("NewTitle");
         input.setContent("New note content");
 
         when(noteRepository.findById(any())).thenReturn(Optional.empty());
-        NoteNotFoundException ex = assertThrows(NoteNotFoundException.class, ()-> noteService.updateNote(1L, input));
+        when(noteRepository.existsByIdAndOwnerId(1L, mockUser.getId())).thenReturn(true);
+        NoteNotFoundException ex = assertThrows(NoteNotFoundException.class, ()-> noteService.updateNote(1L, input, mockUser));
 
         assertEquals("Note not found", ex.getMessage());
 
@@ -175,14 +181,49 @@ public class NoteServiceTests {
     }
 
     @Test
-    void updateUser_ShouldThrowException_WhenUpdateBodyIsEmpty(){
+    void updateNote_ShouldThrowException_WhenUpdateBodyIsEmpty(){
         UpdateNoteDto input = new UpdateNoteDto();
 
-        NoChangesProvidedException ex = assertThrows(NoChangesProvidedException.class, ()->noteService.updateNote(1L, input));
+        when(noteRepository.existsByIdAndOwnerId(1L, mockUser.getId())).thenReturn(true);
+        NoChangesProvidedException ex = assertThrows(NoChangesProvidedException.class, ()->noteService.updateNote(1L, input, mockUser));
 
         assertEquals("Empty request. Can't update note.", ex.getMessage());
 
         verify(noteRepository, never()).findById(any());
+        verify(noteRepository, never()).save(any(Note.class));
+    }
+
+    @Test
+    void updateNote_ShouldThrowException_WhenNoteIsDeleted(){
+        UpdateNoteDto input = new UpdateNoteDto();
+        input.setTitle("NewTitle");
+        input.setContent("New note content");
+
+        mockNote.setDeleted(true);
+        mockNote.setDeletedAt(LocalDateTime.now());
+
+        when(noteRepository.findById(1L)).thenReturn(Optional.of(mockNote));
+        when(noteRepository.existsByIdAndOwnerId(1L, mockUser.getId())).thenReturn(true);
+
+        NoteDeletedException ex = assertThrows(NoteDeletedException.class, ()->noteService.updateNote(1L, input, mockUser));
+
+        assertEquals("Note was deleted", ex.getMessage());
+
+        verify(noteRepository, never()).save(any(Note.class));
+    }
+
+    @Test
+    void updateNote_ShouldThrowException_WhenUserIsNotNoteOwner(){
+        UpdateNoteDto input = new UpdateNoteDto();
+        input.setTitle("NewTitle");
+        input.setContent("New note content");
+
+        when(noteRepository.existsByIdAndOwnerId(1L, mockUser.getId())).thenReturn(false);
+
+        UserNotNoteOwner ex = assertThrows(UserNotNoteOwner.class, ()->noteService.updateNote(1L, input, mockUser));
+
+        assertEquals("User is not the owner of the note.", ex.getMessage());
+
         verify(noteRepository, never()).save(any(Note.class));
     }
 
@@ -199,9 +240,10 @@ public class NoteServiceTests {
         mockNote.setDeletedAt(null);
 
         when(noteRepository.findById(1L)).thenReturn(Optional.of(mockNote));
+        when(noteRepository.existsByIdAndOwnerId(1L, mockUser.getId())).thenReturn(true);
         when(noteRepository.save(any(Note.class))).thenAnswer(i->i.getArgument(0));
 
-        noteService.deleteNote(1L);
+        noteService.deleteNote(1L, mockUser);
 
         assertTrue(mockNote.isDeleted());
         assertNotNull(mockNote.getDeletedAt());
@@ -214,7 +256,8 @@ public class NoteServiceTests {
     @Test
     void deleteNote_ShouldThrowException_WhenNoteNotFound(){
         when(noteRepository.findById(1L)).thenReturn(Optional.empty());
-        NoteNotFoundException ex = assertThrows(NoteNotFoundException.class, ()-> noteService.deleteNote(1L));
+        when(noteRepository.existsByIdAndOwnerId(1L, mockUser.getId())).thenReturn(true);
+        NoteNotFoundException ex = assertThrows(NoteNotFoundException.class, ()-> noteService.deleteNote(1L, mockUser));
 
         assertEquals("Note not found", ex.getMessage());
 
@@ -237,7 +280,8 @@ public class NoteServiceTests {
         mockNote.setDeletedAt(LocalDateTime.now());
 
         when(noteRepository.findById(1L)).thenReturn(Optional.of(mockNote));
-        NoteDeletedException ex = assertThrows(NoteDeletedException.class, ()->noteService.deleteNote(1L));
+        when(noteRepository.existsByIdAndOwnerId(1L, mockUser.getId())).thenReturn(true);
+        NoteDeletedException ex = assertThrows(NoteDeletedException.class, ()->noteService.deleteNote(1L, mockUser));
 
         assertEquals("Note was deleted", ex.getMessage());
         assertTrue(mockNote.isDeleted());
@@ -256,7 +300,9 @@ public class NoteServiceTests {
 
         mockNote.setImages(new ArrayList<>(List.of(existingImage)));
         when(noteRepository.findById(1L)).thenReturn(Optional.of(mockNote));
-        noteService.deleteNoteImage(1L, 1L);
+        when(noteRepository.existsByIdAndOwnerId(1L, mockUser.getId())).thenReturn(true);
+        when(noteRepository.save(any(Note.class))).thenAnswer(i->i.getArgument(0));
+        noteService.deleteNoteImage(1L, 1L, mockUser);
 
 
         assertEquals(0, mockNote.getImages().size());

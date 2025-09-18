@@ -51,7 +51,7 @@ public class GroupServiceTests {
         mockGroup.setId(1L);
         mockGroup.setName("testgroup");
         mockGroup.setDescription("This is a test group");
-        mockGroup.setPrivateGroup(true);
+        mockGroup.setPrivate(true);
         mockGroup.setPassword("encodedPassword");
         mockGroup.setOwner(mockUser);
         mockGroup.setDeleted(false);
@@ -78,7 +78,7 @@ public class GroupServiceTests {
 
         assertEquals("test", savedGroup.getName());
         assertEquals("test description", savedGroup.getDescription());
-        assertTrue(savedGroup.isPrivateGroup());
+        assertTrue(savedGroup.isPrivate());
         assertEquals("encodedPassword", savedGroup.getPassword());
         assertEquals("testuser", savedGroup.getOwner().getUsername());
         assertEquals("testuser", savedGroup.getOwner().getUsername());
@@ -161,13 +161,13 @@ public class GroupServiceTests {
 
     @Test
     void updateGroup_ShouldUpdateGroup_WhenGroupFound(){
-        mockGroup.setPrivateGroup(false);
+        mockGroup.setPrivate(false);
         mockGroup.setPassword(null);
 
         UpdateGroupDto input = new UpdateGroupDto();
         input.setName("new name");
         input.setDescription("new description");
-        input.setPrivateGroup(true);
+        input.setIsPrivate(true);
         input.setPassword("password123");
 
         when(groupRepository.findById(1L)).thenReturn(Optional.of(mockGroup));
@@ -185,7 +185,7 @@ public class GroupServiceTests {
         assertEquals("new name", response.getName());
         assertEquals("new description", updatedGroup.getDescription());
         assertEquals("new description", response.getDescription());
-        assertTrue(updatedGroup.isPrivateGroup());
+        assertTrue(updatedGroup.isPrivate());
         assertTrue(response.isPrivate());
         assertEquals("encodedPassword", updatedGroup.getPassword());
 
@@ -211,7 +211,7 @@ public class GroupServiceTests {
     @Test
     void updateGroup_ShouldThrowException_WhenGroupIsAlreadyPrivate(){
         UpdateGroupDto input = new UpdateGroupDto();
-        input.setPrivateGroup(true);
+        input.setIsPrivate(true);
         input.setPassword("password123");
 
         when(groupRepository.findById(1L)).thenReturn(Optional.of(mockGroup));
@@ -226,11 +226,11 @@ public class GroupServiceTests {
 
     @Test
     void upgradeGroup_ShouldThrowException_WhenChangeToPrivateAndPasswordIsNull(){
-        mockGroup.setPrivateGroup(false);
+        mockGroup.setPrivate(false);
         mockGroup.setPassword(null);
 
         UpdateGroupDto input = new UpdateGroupDto();
-        input.setPrivateGroup(true);
+        input.setIsPrivate(true);
 
         when(groupRepository.findById(1L)).thenReturn(Optional.of(mockGroup));
         when(groupRepository.existsByIdAndOwnerId(anyLong(), anyLong())).thenReturn(true);
@@ -247,7 +247,7 @@ public class GroupServiceTests {
         UpdateGroupDto input = new UpdateGroupDto();
         input.setName("new name");
         input.setDescription("new description");
-        input.setPrivateGroup(true);
+        input.setIsPrivate(true);
         input.setPassword("password123");
 
         when(groupRepository.findById(1L)).thenReturn(Optional.empty());
@@ -270,7 +270,7 @@ public class GroupServiceTests {
         UpdateGroupDto input = new UpdateGroupDto();
         input.setName("new name");
         input.setDescription("new description");
-        input.setPrivateGroup(true);
+        input.setIsPrivate(true);
         input.setPassword("password123");
 
         when(groupRepository.findById(1L)).thenReturn(Optional.of(mockGroup));
@@ -364,7 +364,7 @@ public class GroupServiceTests {
 
     @Test
     void joinGroup_ShouldThrowException_WhenGroupIsPrivateAndPasswordIsIncorrect(){
-        mockGroup.setPrivateGroup(true);
+        mockGroup.setPrivate(true);
         mockGroup.setPassword("secret123");
         JoinGroupRequestDto request = new JoinGroupRequestDto();
         request.setPassword("password123");

@@ -2,11 +2,9 @@ package com.notex.student_notes.config.security;
 
 import com.notex.student_notes.auth.dto.NoChangesProvidedException;
 import com.notex.student_notes.auth.exceptions.*;
+import com.notex.student_notes.config.exceptions.RateLimitExceededException;
 import com.notex.student_notes.group.exceptions.*;
-import com.notex.student_notes.note.exceptions.NoteDeletedException;
-import com.notex.student_notes.note.exceptions.NoteImageDeleteException;
-import com.notex.student_notes.note.exceptions.NoteImageUploadException;
-import com.notex.student_notes.note.exceptions.NoteNotFoundException;
+import com.notex.student_notes.note.exceptions.*;
 import com.notex.student_notes.user.exceptions.UserNotFoundException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -159,5 +157,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(UserNotGroupOwnerException.class)
     public ResponseEntity<Map<String, Object>> handleUserNotGroupOwnerException(Exception ex){
         return buildErrorResponse(ex, HttpStatus.FORBIDDEN, ex.getMessage());
+    }
+    @ExceptionHandler(UserNotNoteOwner.class)
+    public ResponseEntity<Map<String, Object>> handleUserNotNoteOwner(Exception ex){
+        return buildErrorResponse(ex, HttpStatus.FORBIDDEN, ex.getMessage());
+    }
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<Map<String, Object>> handleRateLimitExceededException(Exception ex){
+        return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS, ex.getMessage());
     }
 }

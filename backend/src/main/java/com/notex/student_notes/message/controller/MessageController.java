@@ -1,10 +1,12 @@
 package com.notex.student_notes.message.controller;
 
+import com.notex.student_notes.config.RateLimitingService;
 import com.notex.student_notes.message.dto.MessageDto;
 import com.notex.student_notes.message.dto.SendMessageDto;
 import com.notex.student_notes.message.service.MessageService;
 import com.notex.student_notes.user.model.User;
 import com.notex.student_notes.user.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 public class MessageController {
     private final MessageService messageService;
     private final UserService userService;
+    private final RateLimitingService rateLimitingService;
 
     @GetMapping
     public ResponseEntity<Page<MessageDto>> getMessages(@PathVariable @Positive Long groupId, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size){
@@ -39,7 +42,9 @@ public class MessageController {
     }
 
     @PostMapping
-    public ResponseEntity<MessageDto> sendMessage(@PathVariable @Positive Long groupId, @RequestBody @Valid SendMessageDto messageToSend){
+    public ResponseEntity<MessageDto> sendMessage(@PathVariable @Positive Long groupId, @RequestBody @Valid SendMessageDto messageToSend, HttpServletRequest request){
+        String remoteAddress = request.getRemoteAddr();
+        rateLimitingService.checkRateLimit(remoteAddress, 60, 1); // 60 messages per minute
         User currentUser = getCurrentUser();
         log.info("POST /groups/{}/messages: User {} sending message to group {}.", groupId, currentUser.getUsername(), messageToSend.getContent());
         messageToSend.setGroupId(groupId);

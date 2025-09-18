@@ -31,7 +31,7 @@ public class Group {
     private String description;
 
     @Column(nullable = false)
-    private boolean privateGroup;
+    private boolean isPrivate;
 
     @Size(min =8)
     private String password;

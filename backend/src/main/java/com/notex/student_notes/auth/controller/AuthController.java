@@ -3,7 +3,10 @@ package com.notex.student_notes.auth.controller;
 
 import com.notex.student_notes.auth.dto.*;
 import com.notex.student_notes.auth.service.AuthService;
+import com.notex.student_notes.config.RateLimitingService;
+import com.notex.student_notes.group.dto.ApiResponse;
 import com.notex.student_notes.user.dto.UserDto;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,10 +24,14 @@ import org.springframework.web.bind.annotation.RestController;
 @Validated
 @RequiredArgsConstructor
 public class AuthController {
+
+    private final RateLimitingService rateLimitingService;
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<UserDto> register(@RequestBody @Valid RegisterUserDto input){
+    public ResponseEntity<UserDto> register(@RequestBody @Valid RegisterUserDto input, HttpServletRequest request){
+        String remoteAddress = request.getRemoteAddr();
+        rateLimitingService.checkRateLimit(remoteAddress, 5, 1);
         log.info("POST /auth/register: Registering user {}.", input.getUsername());
         UserDto response = authService.register(input);
         log.debug("Success - POST /auth/register: Registered user {}.", input.getUsername());
@@ -39,18 +46,20 @@ public class AuthController {
     }
 
     @PostMapping("/verify")
-    public ResponseEntity<?> verify(@RequestBody @Valid VerifyUserDto input){
+    public ResponseEntity<ApiResponse> verify(@RequestBody @Valid VerifyUserDto input){
         log.info("POST /auth/verify: Verifying user {}.", input.getUsername());
         authService.verifyUser(input);
         log.debug("Success - POST /auth/verify: Verified user {}.", input.getUsername());
-        return ResponseEntity.ok("User verified successfully.");
+        return ResponseEntity.ok(new ApiResponse("User verified successfully."));
     }
 
     @PostMapping("/resend")
-    public ResponseEntity<?> resendVerification(@RequestBody @Valid ResendVerificationDto input){
+    public ResponseEntity<ApiResponse> resendVerification(@RequestBody @Valid ResendVerificationDto input, HttpServletRequest request){
+        String remoteAddress = request.getRemoteAddr();
+        rateLimitingService.checkRateLimit(remoteAddress, 5, 1);
         log.info("POST /auth/resend: Resending verification email to user {}", input.getUsername());
         authService.resendVerificationEmail(input.getUsername());
         log.debug("Success - POST /auth/resend: Resent verification email.");
-        return ResponseEntity.ok("Verification code was sent successfully. Check your email.");
+        return ResponseEntity.ok(new ApiResponse("Verification code was sent successfully. Check your email."));
     }
 }

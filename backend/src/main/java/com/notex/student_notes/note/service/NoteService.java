@@ -1,6 +1,7 @@
 package com.notex.student_notes.note.service;
 
 import com.notex.student_notes.auth.dto.NoChangesProvidedException;
+import com.notex.student_notes.group.exceptions.UserNotGroupOwnerException;
 import com.notex.student_notes.minio.service.MinioService;
 import com.notex.student_notes.note.dto.CreateNoteDto;
 import com.notex.student_notes.note.dto.NoteDto;
@@ -8,6 +9,7 @@ import com.notex.student_notes.note.dto.UpdateNoteDto;
 import com.notex.student_notes.note.exceptions.NoteDeletedException;
 import com.notex.student_notes.note.exceptions.NoteImageDeleteException;
 import com.notex.student_notes.note.exceptions.NoteNotFoundException;
+import com.notex.student_notes.note.exceptions.UserNotNoteOwner;
 import com.notex.student_notes.note.mapper.NoteMapper;
 import com.notex.student_notes.note.model.Note;
 import com.notex.student_notes.note.model.NoteImage;
@@ -18,6 +20,8 @@ import com.notex.student_notes.user.model.User;
 import com.notex.student_notes.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -109,13 +113,21 @@ public class NoteService {
     }
 
     @Transactional
-    public NoteDto updateNote(Long id, UpdateNoteDto inputNote){
+    public NoteDto updateNote(Long id, UpdateNoteDto inputNote, User currentUser){
         log.info("Updating note {}", id);
+        if(!verifyUserIsOwner(id, currentUser)){
+            log.warn("Fail - User {} can't update note {}: User is not the owner.", currentUser.getUsername(), id);
+            throw new UserNotNoteOwner("User is not the owner of the note.");
+        }
         if (!inputNote.hasAny()){
             log.warn("Fail - Can't update note {}: request is empty.", id);
             throw new NoChangesProvidedException("Empty request. Can't update note.");
         }
         Note noteToUpdate = findNoteById(id);
+        if (noteToUpdate.isDeleted()){
+            log.warn("Fail - Note {} is deleted", id);
+            throw new NoteDeletedException("Note was deleted");
+        }
         if (inputNote.hasTitle()){
             noteToUpdate.setTitle(inputNote.getTitle());
         }
@@ -163,8 +175,12 @@ public class NoteService {
     }
 
     @Transactional
-    public void deleteNote(Long id) {
+    public void deleteNote(Long id, User currentUser) {
         log.info("Deleting note {}", id );
+        if(!verifyUserIsOwner(id, currentUser)){
+            log.warn("Fail - User {} can't delete note {}: User is not the owner.", currentUser.getUsername(), id);
+            throw new UserNotNoteOwner("User is not the owner of the note.");
+        }
         Note noteToDelete = findNoteById(id);
         noteToDelete.setDeleted(true);
         noteToDelete.setDeletedAt(LocalDateTime.now());
@@ -181,8 +197,12 @@ public class NoteService {
     }
 
     @Transactional
-    public void deleteNoteImage(Long noteId, Long imageId) {
+    public void deleteNoteImage(Long noteId, Long imageId, User currentUser) {
         log.info("Deleting note image {} from note {}", imageId, noteId);
+        if(!verifyUserIsOwner(noteId, currentUser)){
+            log.warn("Fail - User {} can't delete note image {}: User is not the owner.", currentUser.getUsername(), imageId);
+            throw new UserNotNoteOwner("User is not the owner of the note.");
+        }
         Note note = findNoteById(noteId);
         NoteImage noteImage = note.getImages().stream()
                 .filter(i -> Objects.equals(i.getId(), imageId))
@@ -200,7 +220,7 @@ public class NoteService {
         }
     }
 
-    public boolean verifyUserIsOwner(Long id, User user){
+    private boolean verifyUserIsOwner(Long id, User user){
         return noteRepository.existsByIdAndOwnerId(id, user.getId());
     }
 

@@ -34,12 +34,6 @@ public class GroupService {
         return new GroupDto(group);
     }
 
-    public List<GroupDto> getGroupsByPartialName(String partialName){
-        log.info("Fetching groups with partial name {}", partialName);
-        List<Group> groups = groupRepository.findByNameContainingIgnoreCase(partialName);
-        log.debug("Success - Fetched {} groups with partial name {}", groups.size(), partialName);
-        return groups.stream().filter(g -> !g.isDeleted()).map(GroupDto::new).toList();
-    }
 
     public List<GroupDto> getGroupsByPartialName(String partialName, User currentUser){
         log.info("Fetching groups with partial name {} for user {}", partialName, currentUser.getUsername());
@@ -62,18 +56,11 @@ public class GroupService {
     public List<GroupDto> getUserGroups(User user){
         log.info("Fetching user groups for {}", user.getUsername());
 
-        List<Group> ownedGroups = groupRepository.findAllByOwner(user);
-        List<Group> memberGroups = groupRepository.findAllByMembersId(user.getId());
-        
-        log.debug("Found {} owned groups and {} member groups for user {}", 
-                 ownedGroups.size(), memberGroups.size(), user.getUsername());
-        
-        Set<Group> allGroups = new HashSet<>(ownedGroups);
-        allGroups.addAll(memberGroups);
-        
-        log.debug("Success - Fetched {} groups for user {}", allGroups.size(), user.getUsername());
+        List<Group> userGroups = groupRepository.findAllByMembersId(user.getId());
 
-        return allGroups.stream()
+        log.debug("Success - Fetched {} groups for user {}", userGroups.size(), user.getUsername());
+
+        return userGroups.stream()
                 .filter(g -> !g.isDeleted())
                 .map(g -> new GroupDto(g, true))
                 .toList();
@@ -116,7 +103,7 @@ public class GroupService {
         newGroup.setName(input.getName());
         newGroup.setDescription(input.getDescription());
         newGroup.setOwner(owner);
-        newGroup.setPrivateGroup(input.isPrivate());
+        newGroup.setPrivate(input.isPrivate());
         if (input.isPrivate()){
             if (input.getPassword() == null || input.getPassword().isBlank()){
                 log.warn("Fail - Password is null or blank");
@@ -170,8 +157,8 @@ public class GroupService {
             groupToUpdate.setDescription(input.getDescription());
         }
         if (input.hasPrivateGroup()){
-            if (input.getPrivateGroup()){
-                if (groupToUpdate.isPrivateGroup()) {
+            if (input.getIsPrivate()){
+                if (groupToUpdate.isPrivate()) {
                     log.warn("Fail - Group is already private");
                     throw new InvalidGroupUpdateRequestException("Group is already private");
                 }
@@ -179,22 +166,22 @@ public class GroupService {
                     log.warn("Fail - Can't set group to private without password");
                     throw new InvalidGroupUpdateRequestException("Can't set group to private without password");
                 }
-                groupToUpdate.setPrivateGroup(true);
+                groupToUpdate.setPrivate(true);
                 groupToUpdate.setPassword(passwordEncoder.encode(input.getPassword()));
             }else{
-                if (!groupToUpdate.isPrivateGroup()){
+                if (!groupToUpdate.isPrivate()){
                     log.warn("Fail - Group is already public");
                     throw new InvalidGroupUpdateRequestException("Group is already public");
                 }else{
                     if (!input.hasPassword()) {
-                        groupToUpdate.setPrivateGroup(false);
+                        groupToUpdate.setPrivate(false);
                         groupToUpdate.setPassword(null);
                     }
                 }
             }
         }
         if (input.hasPassword() && !input.hasPrivateGroup()){
-            if (!groupToUpdate.isPrivateGroup()){
+            if (!groupToUpdate.isPrivate()){
                 log.warn("Fail - Can't set password for public group");
                 throw new InvalidGroupUpdateRequestException("Can't set password for public group");
             }else{
@@ -223,7 +210,7 @@ public class GroupService {
             log.warn("Fail - Group {} is deleted", groupId);
             throw new GroupDeletedException("Group was deleted");
         }
-        if (group.isPrivateGroup()){
+        if (group.isPrivate()){
             if (!passwordEncoder.matches(request.getPassword(), group.getPassword())){
                 log.warn("Fail - Wrong password");
                 throw new AddUserRequestInvalidException("Wrong password");

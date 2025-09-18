@@ -14,7 +14,7 @@ public class UpdateGroupDto {
     @Size(max = 5000)
     private String description;
 
-    private Boolean privateGroup;
+    private Boolean isPrivate;
 
     private String password;
 
@@ -26,7 +26,7 @@ public class UpdateGroupDto {
         return description != null && !description.isBlank();
     }
     public boolean hasPrivateGroup(){
-        return privateGroup != null;
+        return isPrivate != null;
     }
 
     public boolean hasPassword(){

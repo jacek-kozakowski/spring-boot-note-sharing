@@ -18,6 +18,7 @@ public class GroupDto {
     private String ownerUsername;
     private int membersCount;
     private LocalDateTime createdAt;
+    @JsonProperty("isPrivate")
     private boolean isPrivate;
     @JsonProperty("isMember")
     private boolean isMember;
@@ -29,7 +30,7 @@ public class GroupDto {
         this.ownerUsername = group.getOwner().getUsername();
         this.membersCount = group.getMembers().size();
         this.createdAt = group.getCreatedAt();
-        this.isPrivate = group.isPrivateGroup();
+        this.isPrivate = group.isPrivate();
         this.isMember = false;
     }
 
@@ -40,7 +41,7 @@ public class GroupDto {
         this.ownerUsername = group.getOwner().getUsername();
         this.membersCount = group.getMembers().size();
         this.createdAt = group.getCreatedAt();
-        this.isPrivate = group.isPrivateGroup();
+        this.isPrivate = group.isPrivate();
         this.isMember = isMember;
     }
 }

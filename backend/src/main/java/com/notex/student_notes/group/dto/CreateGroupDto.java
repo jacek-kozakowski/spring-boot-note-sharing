@@ -1,5 +1,6 @@
 package com.notex.student_notes.group.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -16,6 +17,7 @@ public class CreateGroupDto {
     private String description;
 
     @NotNull
+    @JsonProperty("isPrivate")
     private boolean isPrivate;
 
     @Size(min =8)

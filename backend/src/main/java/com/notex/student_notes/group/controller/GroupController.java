@@ -1,14 +1,17 @@
 package com.notex.student_notes.group.controller;
 
+import com.notex.student_notes.config.RateLimitingService;
 import com.notex.student_notes.group.dto.*;
 import com.notex.student_notes.group.service.GroupService;
 import com.notex.student_notes.user.dto.UserDto;
 import com.notex.student_notes.user.model.User;
 import com.notex.student_notes.user.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -24,6 +27,9 @@ import java.util.List;
 @RequiredArgsConstructor
 @Validated
 public class GroupController {
+
+    @Autowired
+    private final RateLimitingService rateLimitingService;
 
     private final GroupService groupService;
     private final UserService userService;
@@ -65,8 +71,11 @@ public class GroupController {
         return ResponseEntity.ok(members);
 
     }
+
     @PostMapping
-    public ResponseEntity<GroupDto> createGroup(@RequestBody @Valid CreateGroupDto input){
+    public ResponseEntity<GroupDto> createGroup(@RequestBody @Valid CreateGroupDto input, HttpServletRequest request){
+        String remoteAddress = request.getRemoteAddr();
+        rateLimitingService.checkRateLimit(remoteAddress, 5, 10);
         User currentUser = getCurrentUser();
         log.info("POST /groups: User {} creating group {}.", currentUser.getUsername(),  input.getName());
         GroupDto createdGroup = groupService.createGroup(input, currentUser);
@@ -75,7 +84,9 @@ public class GroupController {
     }
 
     @PatchMapping("/{groupId}")
-    public ResponseEntity<GroupDto> updateGroup(@PathVariable @Positive Long groupId, @RequestBody @Valid UpdateGroupDto input){
+    public ResponseEntity<GroupDto> updateGroup(@PathVariable @Positive Long groupId, @RequestBody @Valid UpdateGroupDto input, HttpServletRequest request){
+        String remoteAddress = request.getRemoteAddr();
+        rateLimitingService.checkRateLimit(remoteAddress, 5, 5);
         User currentUser = getCurrentUser();
         log.info("PATCH /groups/{}: User {} updating group.", groupId, currentUser.getUsername());
         GroupDto updatedGroup = groupService.updateGroup(groupId, input, currentUser);
@@ -95,6 +106,7 @@ public class GroupController {
     @PostMapping("/{groupId}/members/{username}")
     public ResponseEntity<ApiResponse> addUserToGroup(@PathVariable @Positive Long groupId, @PathVariable String username){
         User currentUser = getCurrentUser();
+        rateLimitingService.checkRateLimit(username, 5, 1);
         log.info("POST /groups/{}/members/{}: User {} adding member", groupId, username, currentUser.getUsername());
         groupService.addUserToGroup(groupId, username, currentUser);
         log.debug("Success - POST /groups/{}/members/{}: User {} added member to group.", groupId, username, currentUser.getUsername());

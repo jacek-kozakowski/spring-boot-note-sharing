@@ -2,6 +2,8 @@ package com.notex.student_notes.group;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.notex.student_notes.auth.security.JwtAuthFilter;
+import com.notex.student_notes.config.RateLimitingService;
+import com.notex.student_notes.config.exceptions.RateLimitExceededException;
 import com.notex.student_notes.group.controller.GroupController;
 import com.notex.student_notes.group.dto.CreateGroupDto;
 import com.notex.student_notes.group.dto.GroupDto;
@@ -50,6 +52,9 @@ public class GroupControllerTests {
     @MockitoBean
     private UserService userService;
 
+    @MockitoBean
+    private RateLimitingService rateLimitingService;
+
     private User mockUser;
     private Group mockGroup;
 
@@ -64,7 +69,7 @@ public class GroupControllerTests {
         mockGroup.setName("testgroup");
         mockGroup.setDescription("This is a test group");
         mockGroup.setOwner(mockUser);
-        mockGroup.setPrivateGroup(true);
+        mockGroup.setPrivate(true);
         mockGroup.setPassword("encodedPassword");
         mockGroup.setCreatedAt(LocalDateTime.now());
         mockGroup.setDeleted(false);
@@ -94,8 +99,27 @@ public class GroupControllerTests {
                 .andExpect(jsonPath("$.name").value("testgroup"))
                 .andExpect(jsonPath("$.description").value("This is a test group"))
                 .andExpect(jsonPath("$.ownerUsername").value("testuser"))
-                .andExpect(jsonPath("$.private").value(true))
+                .andExpect(jsonPath("$.isPrivate").value(true))
                 .andExpect(jsonPath("$.createdAt").isNotEmpty());
+    }
+
+    @Test
+    @WithMockUser(username = "testuser", roles = "USER")
+    void createGroup_ShouldReturnTooManyRequests_WhenRateLimitExceeded() throws Exception {
+        CreateGroupDto input = new CreateGroupDto();
+        input.setName("testgroup");
+        input.setDescription("This is a test group");
+        input.setPrivate(true);
+        input.setPassword("password123");
+
+        doThrow(new RateLimitExceededException("Rate limit exceeded"))
+                .when(rateLimitingService).checkRateLimit(anyString(), anyInt(), anyInt());
+
+        mockMvc.perform(post("/groups")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(input)))
+                .andExpect(status().isTooManyRequests());
     }
 
     @Test
@@ -104,7 +128,7 @@ public class GroupControllerTests {
         UpdateGroupDto input = new UpdateGroupDto();
         input.setName("New name");
         input.setDescription("New description");
-        input.setPrivateGroup(true);
+        input.setIsPrivate(true);
         input.setPassword("password123");
 
         GroupDto response = new GroupDto(mockGroup);
@@ -125,8 +149,27 @@ public class GroupControllerTests {
                 .andExpect(jsonPath("$.name").value("New name"))
                 .andExpect(jsonPath("$.description").value("New description"))
                 .andExpect(jsonPath("$.ownerUsername").value("testuser"))
-                .andExpect(jsonPath("$.private").value(true))
+                .andExpect(jsonPath("$.isPrivate").value(true))
                 .andExpect(jsonPath("$.createdAt").isNotEmpty());
+    }
+
+    @Test
+    @WithMockUser(username = "testuser", roles = "USER")
+    void updateGroup_ShouldReturnTooManyRequests_WhenRateLimitExceeded() throws Exception {
+        UpdateGroupDto input = new UpdateGroupDto();
+        input.setName("New name");
+        input.setDescription("New description");
+        input.setIsPrivate(true);
+        input.setPassword("password123");
+
+        doThrow(new RateLimitExceededException("Rate limit exceeded"))
+                .when(rateLimitingService).checkRateLimit(anyString(), anyInt(), anyInt());
+
+        mockMvc.perform(patch("/groups/1")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(input)))
+                .andExpect(status().isTooManyRequests());
     }
 
     @Test
@@ -172,6 +215,21 @@ public class GroupControllerTests {
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value("User added to group successfully"));
+    }
+
+    @Test
+    @WithMockUser
+    void addUserToGroup_ShouldThrowTooManyRequests_WhenRateLimitExceeded() throws Exception {
+        User mockToAdd = new User();
+        mockToAdd.setId(2L);
+        mockToAdd.setUsername("testuser2");
+
+        doThrow(new RateLimitExceededException("Rate limit exceeded"))
+                .when(rateLimitingService).checkRateLimit(anyString(), anyInt(), anyInt());
+
+        mockMvc.perform(post("/groups/1/members/testuser2")
+                .with(csrf()))
+                .andExpect(status().isTooManyRequests());
     }
 
     @Test

@@ -2,6 +2,7 @@ package com.notex.student_notes.message;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.notex.student_notes.auth.security.JwtAuthFilter;
+import com.notex.student_notes.config.RateLimitingService;
 import com.notex.student_notes.group.model.Group;
 import com.notex.student_notes.message.controller.MessageController;
 import com.notex.student_notes.message.dto.MessageDto;
@@ -22,6 +23,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -39,6 +42,8 @@ public class MessageControllerTests {
     private MessageService messageService;
     @MockitoBean
     private UserService userService;
+    @MockitoBean
+    private RateLimitingService rateLimitingService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -86,5 +91,22 @@ public class MessageControllerTests {
                 .andExpect(jsonPath("$.createdAt").isNotEmpty())
                 .andExpect(jsonPath("$.author").value("testuser"))
                 .andExpect(jsonPath("$.groupId").value(1L));
+    }
+
+    @Test
+    @WithMockUser(username = "testuser", roles = "USER")
+    void sendMessage_ShouldReturnTooManyRequests_WhenRateLimitExceeded() throws Exception {
+        SendMessageDto input = new SendMessageDto();
+        input.setGroupId(1L);
+        input.setContent("Test message");
+
+        doThrow(new com.notex.student_notes.config.exceptions.RateLimitExceededException("Rate limit exceeded"))
+                .when(rateLimitingService).checkRateLimit(anyString(), anyInt(), anyInt());
+
+        mockMvc.perform(post("/groups/1/messages")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(input)))
+                .andExpect(status().isTooManyRequests());
     }
 }

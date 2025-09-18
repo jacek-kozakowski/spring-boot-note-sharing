@@ -2,9 +2,13 @@ package com.notex.student_notes.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.notex.student_notes.auth.controller.AuthController;
+import com.notex.student_notes.auth.dto.LoginUserRequestDto;
+import com.notex.student_notes.auth.dto.LoginUserResponseDto;
 import com.notex.student_notes.auth.dto.RegisterUserDto;
 import com.notex.student_notes.auth.service.AuthService;
 import com.notex.student_notes.auth.service.JwtService;
+import com.notex.student_notes.config.RateLimitingService;
+import com.notex.student_notes.config.exceptions.RateLimitExceededException;
 import com.notex.student_notes.user.dto.UserDto;
 import com.notex.student_notes.user.service.CustomUserDetailsService;
 import org.junit.jupiter.api.Test;
@@ -23,8 +27,11 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @AutoConfigureMockMvc
@@ -41,6 +48,9 @@ public class AuthControllerTests {
 
     @MockitoBean
     CustomUserDetailsService customUserDetailsService;
+
+    @MockitoBean
+    RateLimitingService rateLimitingService;
 
     @Autowired
     ObjectMapper objectMapper;
@@ -73,7 +83,7 @@ public class AuthControllerTests {
 
         when(authService.register(any(RegisterUserDto.class))).thenReturn(response);
 
-        mockMvc.perform(MockMvcRequestBuilders.post("/auth/register")
+        mockMvc.perform(post("/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(input)))
                 .andExpect(status().isCreated())
@@ -84,6 +94,49 @@ public class AuthControllerTests {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.lastName").value("Last"));
 
         verify(authService).register(any(RegisterUserDto.class));
+
+    }
+
+    @Test
+    void register_ShouldReturnTooManyRequests_WhenRateLimitExceeded() throws Exception {
+        RegisterUserDto input = new RegisterUserDto();
+        input.setUsername("test");
+        input.setPassword("password123");
+        input.setEmail("test@example.com");
+        input.setFirstName("First");
+        input.setLastName("Last");
+
+        doThrow(new RateLimitExceededException("Rate limit exceeded")).when(rateLimitingService).checkRateLimit(anyString(), anyInt(), anyInt());
+
+        mockMvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(csrf())
+                        .content(objectMapper.writeValueAsString(input))
+                ).andExpect(status().isTooManyRequests());
+    }
+
+    @Test
+    void login_ShouldReturnLoginUserResponseDto_WhenCredentialsAreValid() throws Exception {
+        LoginUserRequestDto input = new LoginUserRequestDto();
+        input.setUsername("test");
+        input.setPassword("password123");
+
+        LoginUserResponseDto response = new LoginUserResponseDto();
+        response.setToken("jwttoken");
+        response.setTokenExpirationTime(3600L);
+        when(authService.authenticate(any(LoginUserRequestDto.class))).thenReturn(response);
+
+        mockMvc.perform(post("/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf())
+                .content(objectMapper.writeValueAsString(input)))
+                .andExpect(status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.token").value("jwttoken"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.tokenExpirationTime").value(3600L));
+    }
+
+    @Test
+    void verify_ShouldReturnOk_WhenDataIsValid()  {
 
     }
 }
