@@ -29,7 +29,7 @@ interface GroupCardProps {
   onEdit?: (group: Group) => void;
   onDelete?: (group: Group) => void;
   onLeave?: (group: Group) => void;
-  onJoin?: () => void;
+  onJoin?: (group: Group) => void;
 }
 
 const GroupCard: React.FC<GroupCardProps> = ({
@@ -181,7 +181,7 @@ const GroupCard: React.FC<GroupCardProps> = ({
           {!isOwner && !isMember && onJoin && (
             <Button
               size="small"
-              onClick={onJoin}
+              onClick={() => onJoin(group)}
               color="primary"
               variant="outlined"
             >

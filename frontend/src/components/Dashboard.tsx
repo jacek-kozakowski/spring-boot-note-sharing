@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Container,
@@ -18,13 +18,11 @@ import {
   DialogActions,
   CircularProgress,
   Alert,
-  Fab,
   Paper,
   Divider,
 } from '@mui/material';
 import {
   Search as SearchIcon,
-  Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   Visibility as ViewIcon,
@@ -35,6 +33,7 @@ import {
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { notexAPI } from '../services/api';
+import SmartFab from './SmartFab';
 import type { Note } from '../types/note';
 
 const Dashboard: React.FC = () => {
@@ -50,9 +49,77 @@ const Dashboard: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [noteToDelete, setNoteToDelete] = useState<Note | null>(null);
 
+  const loadMyNotes = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      console.log('Loading my notes...');
+      const response = await notexAPI.users.getMyNotes();
+      console.log('My notes response:', response.data);
+      setNotes(response.data);
+    } catch (err: unknown) {
+      setError('Failed to load notes');
+      console.error('Error loading notes:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const searchNotes = useCallback(async (query: string) => {
+    if (!query.trim()) {
+      loadMyNotes();
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      console.log('Searching for notes with query:', query.trim());
+      const response = await notexAPI.notes.getNotesByPartialName(query.trim());
+      console.log('Search response:', response.data);
+      setNotes(response.data);
+    } catch (err: unknown) {
+      setError('Failed to search notes');
+      console.error('Error searching notes:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [loadMyNotes]);
+
+  const searchNotesByUser = useCallback(async (username: string) => {
+    if (!username.trim()) {
+      loadMyNotes();
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      console.log('Searching for notes by user:', username.trim());
+      const response = await notexAPI.users.getUserNotes(username.trim());
+      console.log('User notes response:', response.data);
+      setNotes(response.data);
+    } catch (err: unknown) {
+      setError(`Failed to load notes for user ${username}`);
+      console.error('Error loading user notes:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [loadMyNotes]);
+
+  const loadNotes = useCallback(async () => {
+    if (searchQuery) {
+      await searchNotes(searchQuery);
+    } else if (userQuery) {
+      await searchNotesByUser(userQuery);
+    } else {
+      await loadMyNotes();
+    }
+  }, [searchQuery, userQuery, searchNotes, searchNotesByUser, loadMyNotes]);
+
   useEffect(() => {
     loadNotes();
-  }, []);
+  }, [loadNotes]);
 
   useEffect(() => {
     const searchParam = searchParams.get('search');
@@ -71,75 +138,7 @@ const Dashboard: React.FC = () => {
       setUserQuery('');
       loadMyNotes();
     }
-  }, [searchParams]);
-
-  const loadMyNotes = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      console.log('Loading my notes...');
-      const response = await notexAPI.users.getMyNotes();
-      console.log('My notes response:', response.data);
-      setNotes(response.data);
-    } catch (err: any) {
-      setError('Failed to load notes');
-      console.error('Error loading notes:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const searchNotes = async (query: string) => {
-    if (!query.trim()) {
-      loadMyNotes();
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-      console.log('Searching for notes with query:', query.trim());
-      const response = await notexAPI.notes.getNotesByPartialName(query.trim());
-      console.log('Search response:', response.data);
-      setNotes(response.data);
-    } catch (err: any) {
-      setError('Failed to search notes');
-      console.error('Error searching notes:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const searchNotesByUser = async (username: string) => {
-    if (!username.trim()) {
-      loadMyNotes();
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-      console.log('Searching for notes by user:', username.trim());
-      const response = await notexAPI.users.getUserNotes(username.trim());
-      console.log('User notes response:', response.data);
-      setNotes(response.data);
-    } catch (err: any) {
-      setError(`Failed to load notes for user ${username}`);
-      console.error('Error loading user notes:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadNotes = async () => {
-    if (searchQuery) {
-      await searchNotes(searchQuery);
-    } else if (userQuery) {
-      await searchNotesByUser(userQuery);
-    } else {
-      await loadMyNotes();
-    }
-  };
+  }, [searchParams, searchNotes, searchNotesByUser, loadMyNotes]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -168,7 +167,7 @@ const Dashboard: React.FC = () => {
       setNotes(notes.filter(note => note.id !== noteToDelete.id));
       setDeleteDialogOpen(false);
       setNoteToDelete(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError('Failed to delete note');
       console.error('Error deleting note:', err);
     }
@@ -261,7 +260,6 @@ const Dashboard: React.FC = () => {
           {!searchQuery && !userQuery && (
             <Button
               variant="contained"
-              startIcon={<AddIcon />}
               onClick={() => navigate('/notes/create')}
               size="large"
             >
@@ -365,18 +363,7 @@ const Dashboard: React.FC = () => {
         </Grid>
       )}
 
-      <Fab
-        color="primary"
-        aria-label="add"
-        sx={{
-          position: 'fixed',
-          bottom: 16,
-          right: 16,
-        }}
-        onClick={() => navigate('/notes/create')}
-      >
-        <AddIcon />
-      </Fab>
+      <SmartFab />
 
       <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
         <DialogTitle>Delete Note</DialogTitle>

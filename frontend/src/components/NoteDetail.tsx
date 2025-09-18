@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Container,
@@ -45,7 +45,7 @@ const NoteDetail: React.FC = () => {
     }
   }, [id]);
 
-  const loadNote = async () => {
+  const loadNote = useCallback(async () => {
     if (!id) return;
 
     try {
@@ -53,13 +53,13 @@ const NoteDetail: React.FC = () => {
       setError(null);
       const response = await notexAPI.notes.getNoteById(id);
       setNote(response.data);
-    } catch (err: any) {
-      setError('Nie udało się załadować notatki');
+    } catch (err: unknown) {
+      setError('Failed to load note');
       console.error('Error loading note:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
   const handleDelete = async () => {
     if (!note) return;
@@ -67,8 +67,8 @@ const NoteDetail: React.FC = () => {
     try {
       await notexAPI.notes.deleteNote(note.id);
       navigate('/dashboard');
-    } catch (err: any) {
-      setError('Nie udało się usunąć notatki');
+    } catch (err: unknown) {
+      setError('Failed to delete note');
       console.error('Error deleting note:', err);
     }
   };
@@ -80,8 +80,8 @@ const NoteDetail: React.FC = () => {
       await notexAPI.notes.deleteNoteImage(id, imageId);
       // Reload note to get updated images
       await loadNote();
-    } catch (err: any) {
-      setError('Nie udało się usunąć obrazu');
+    } catch (err: unknown) {
+      setError('Failed to delete image');
       console.error('Error deleting image:', err);
     }
   };

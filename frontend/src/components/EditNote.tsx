@@ -177,8 +177,9 @@ const EditNote: React.FC = () => {
 
       await notexAPI.notes.updateNote(id, formDataToSend);
       navigate(`/notes/${id}`);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to update note');
+    } catch (err: unknown) {
+      const errorMessage = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to update note';
+      setError(errorMessage);
       console.error('Error updating note:', err);
     } finally {
       setSaving(false);

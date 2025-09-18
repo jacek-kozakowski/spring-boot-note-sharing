@@ -29,7 +29,7 @@ export interface CreateGroupDto {
 export interface UpdateGroupDto {
   name?: string;
   description?: string;
-  privateGroup?: boolean;
+  isPrivate?: boolean;
   password?: string;
 }
 

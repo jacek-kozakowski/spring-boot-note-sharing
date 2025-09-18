@@ -108,8 +108,9 @@ const CreateNote: React.FC = () => {
 
       const response = await notexAPI.notes.createNote(formDataToSend);
       navigate(`/notes/${response.data.id}`);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to create note');
+    } catch (err: unknown) {
+      const errorMessage = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to create note';
+      setError(errorMessage);
       console.error('Error creating note:', err);
     } finally {
       setLoading(false);

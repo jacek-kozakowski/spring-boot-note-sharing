@@ -8,7 +8,6 @@ import {
   TextField,
   InputAdornment,
   Grid,
-  Fab,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -21,7 +20,6 @@ import {
 } from '@mui/material';
 import {
   Search as SearchIcon,
-  Add as AddIcon,
   GroupAdd as JoinIcon,
   People as PeopleIcon,
   MoreVert as MoreIcon,
@@ -37,6 +35,7 @@ import CreateGroupDialog from './CreateGroupDialog';
 import JoinGroupDialog from './JoinGroupDialog';
 import EditGroupDialog from './EditGroupDialog';
 import GroupMembersDialog from './GroupMembersDialog';
+import SmartFab from './SmartFab';
 import type { Group } from '../types/group';
 
 const GroupsPage: React.FC = () => {
@@ -80,6 +79,19 @@ const GroupsPage: React.FC = () => {
 
   useEffect(() => {
     loadGroups();
+  }, []);
+
+  useEffect(() => {
+    const handleFabClick = (event: CustomEvent) => {
+      if (event.detail?.action === 'create-group') {
+        setCreateDialogOpen(true);
+      }
+    };
+
+    window.addEventListener('fab-click', handleFabClick as EventListener);
+    return () => {
+      window.removeEventListener('fab-click', handleFabClick as EventListener);
+    };
   }, []);
 
   useEffect(() => {
@@ -349,7 +361,6 @@ const GroupsPage: React.FC = () => {
             <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
               <Button
                 variant="contained"
-                startIcon={<AddIcon />}
                 onClick={() => setCreateDialogOpen(true)}
                 size="large"
               >
@@ -378,7 +389,7 @@ const GroupsPage: React.FC = () => {
                   onEdit={handleEditGroup}
                   onDelete={handleDeleteGroup}
                   onLeave={() => handleLeaveGroup(group)}
-                  onJoin={() => handleJoinGroup(group)}
+                  onJoin={handleJoinGroup}
                 />
                 
                 <IconButton
@@ -404,18 +415,7 @@ const GroupsPage: React.FC = () => {
         </Grid>
       )}
 
-      <Fab
-        color="primary"
-        aria-label="add"
-        sx={{
-          position: 'fixed',
-          bottom: 16,
-          right: 16,
-        }}
-        onClick={() => setCreateDialogOpen(true)}
-      >
-        <AddIcon />
-      </Fab>
+      <SmartFab />
 
       <Menu
         anchorEl={menuAnchor}
@@ -455,6 +455,9 @@ const GroupsPage: React.FC = () => {
       <JoinGroupDialog
         open={joinDialogOpen}
         onClose={() => setJoinDialogOpen(false)}
+        groupId={selectedGroup?.id}
+        groupName={selectedGroup?.name}
+        isPrivate={selectedGroup?.isPrivate}
         onSuccess={handleJoinSuccess}
       />
 

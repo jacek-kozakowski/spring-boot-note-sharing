@@ -19,7 +19,6 @@ api.interceptors.request.use(
         return config;
     },
     (error) => {
-        // @ts-ignore
         return Promise.reject(error);
     }
 );
@@ -29,7 +28,6 @@ api.interceptors.response.use(
         if (error.response && error.response.status === 401) {
             localStorage.removeItem('token');
         }
-        // @ts-ignore
         return Promise.reject(error);
     }
 );
@@ -73,11 +71,11 @@ export const notexAPI = {
         getMyGroups: () => api.get('/users/me/groups'),
         getGroupById: (groupId: number) => api.get(`/groups/${groupId}`),
         getGroupMembers: (groupId: number) => api.get(`/groups/${groupId}/members`),
-        createGroup: (createGroupDto:any) => api.post('/groups', createGroupDto),
-        updateGroup: (groupId: number, updateGroupDto:any) => api.patch(`/groups/${groupId}`, updateGroupDto),
+        createGroup: (createGroupDto: unknown) => api.post('/groups', createGroupDto),
+        updateGroup: (groupId: number, updateGroupDto: unknown) => api.patch(`/groups/${groupId}`, updateGroupDto),
         deleteGroup: (groupId: number)=> api.delete(`/groups/${groupId}`),
         addUserToGroup: (groupId: number, username: string) => api.post(`/groups/${groupId}/members/${username}`),
-        joinGroup: (groupId: number, joinGroupRequestDto: any) => api.post(`/groups/${groupId}/members`, joinGroupRequestDto),
+        joinGroup: (groupId: number, joinGroupRequestDto: unknown) => api.post(`/groups/${groupId}/members`, joinGroupRequestDto),
         removeUserFromGroup: (groupId: number, username: string) => api.delete(`/groups/${groupId}/members/${username}`),
         leaveGroup: (groupId: number) => api.delete(`/groups/${groupId}/members/me`)
     },
@@ -109,7 +107,7 @@ export const apiHelpers = {
         try{
             const response = await api.get('/health');
             return response.status === 200;
-        }catch (error){
+        }catch {
             return false;
         }
     }

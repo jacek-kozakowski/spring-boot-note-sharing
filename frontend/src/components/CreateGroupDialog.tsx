@@ -47,10 +47,15 @@ const CreateGroupDialog: React.FC<CreateGroupDialogProps> = ({
   const handleSwitchChange = (field: keyof CreateGroupDto) => (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: event.target.checked,
-    }));
+    console.log('Switch changed:', field, 'to:', event.target.checked);
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        [field]: event.target.checked,
+      };
+      console.log('New formData:', newData);
+      return newData;
+    });
     setError(null);
   };
 
@@ -76,13 +81,15 @@ const CreateGroupDialog: React.FC<CreateGroupDialogProps> = ({
       setLoading(true);
       setError(null);
       
+      console.log('Sending formData:', formData);
       await notexAPI.groups.createGroup(formData);
       
       setFormData({ name: '', description: '', isPrivate: false, password: '' });
       onSuccess();
       onClose();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to create group');
+    } catch (err: unknown) {
+      const errorMessage = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to create group';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -173,7 +180,7 @@ const CreateGroupDialog: React.FC<CreateGroupDialogProps> = ({
           <Button
             type="submit"
             variant="contained"
-            disabled={loading || !formData.name.trim() || !formData.description.trim() || (formData.isPrivate && !formData.password)}
+            disabled={loading || !formData.name.trim() || !formData.description.trim() || (formData.isPrivate && (!formData.password || formData.password.length < 8))}
           >
             {loading ? 'Creating...' : 'Create Group'}
           </Button>

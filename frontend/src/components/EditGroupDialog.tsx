@@ -30,7 +30,7 @@ const EditGroupDialog: React.FC<EditGroupDialogProps> = ({
   const [formData, setFormData] = useState<UpdateGroupDto>({
     name: '',
     description: '',
-    privateGroup: false,
+    isPrivate: false,
     password: '',
   });
   const [loading, setLoading] = useState(false);
@@ -41,7 +41,7 @@ const EditGroupDialog: React.FC<EditGroupDialogProps> = ({
       setFormData({
         name: group.name || '',
         description: group.description || '',
-        privateGroup: group.isPrivate || false,
+        isPrivate: group.isPrivate || false,
         password: '',
       });
     }
@@ -82,7 +82,7 @@ const EditGroupDialog: React.FC<EditGroupDialogProps> = ({
       return;
     }
 
-    if (formData.privateGroup && (!formData.password || formData.password.length < 8)) {
+    if (formData.isPrivate && (!formData.password || formData.password.length < 8)) {
       setError('Password must be at least 8 characters for private groups');
       return;
     }
@@ -94,7 +94,7 @@ const EditGroupDialog: React.FC<EditGroupDialogProps> = ({
       const updateData: UpdateGroupDto = {
         name: formData.name,
         description: formData.description,
-        privateGroup: formData.privateGroup,
+        isPrivate: formData.isPrivate,
       };
 
       if (formData.password) {
@@ -105,8 +105,9 @@ const EditGroupDialog: React.FC<EditGroupDialogProps> = ({
       
       onSuccess();
       onClose();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to update group');
+    } catch (err: unknown) {
+      const errorMessage = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to update group';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -114,7 +115,7 @@ const EditGroupDialog: React.FC<EditGroupDialogProps> = ({
 
   const handleClose = () => {
     if (!loading) {
-      setFormData({ name: '', description: '', privateGroup: false, password: '' });
+      setFormData({ name: '', description: '', isPrivate: false, password: '' });
       setError(null);
       onClose();
     }
@@ -163,8 +164,8 @@ const EditGroupDialog: React.FC<EditGroupDialogProps> = ({
             <FormControlLabel
               control={
                 <Switch
-                  checked={formData.privateGroup}
-                  onChange={handleSwitchChange('privateGroup')}
+                  checked={formData.isPrivate}
+                  onChange={handleSwitchChange('isPrivate')}
                   disabled={loading}
                 />
               }
@@ -172,7 +173,7 @@ const EditGroupDialog: React.FC<EditGroupDialogProps> = ({
               sx={{ mb: 2 }}
             />
 
-            {formData.privateGroup && (
+            {formData.isPrivate && (
               <TextField
                 margin="dense"
                 label="New Group Password (leave empty to keep current)"

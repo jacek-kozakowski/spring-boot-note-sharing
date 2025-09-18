@@ -79,17 +79,17 @@ const Register: React.FC = () => {
         firstName: formData.firstName,
         lastName: formData.lastName
       });
-      setSuccess('Rejestracja zakończona pomyślnie! Sprawdź email z kodem weryfikacyjnym.');
+      setSuccess('Registration completed successfully! Check your email for verification code.');
       setActiveStep(1);
-    } catch (err: any) {
-      if (err.response?.status === 409) {
-        setError('Użytkownik z tym emailem już istnieje');
-      } else if (err.response?.data?.message) {
-        setError(err.response.data.message);
-      } else if (err.code === 'ECONNREFUSED') {
-        setError('Nie można połączyć się z serwerem.');
+    } catch (err: unknown) {
+      if ((err as any)?.response?.status === 409) {
+        setError('User with this email already exists');
+      } else if ((err as any)?.response?.data?.message) {
+        setError((err as any).response.data.message);
+      } else if ((err as any)?.code === 'ECONNREFUSED') {
+        setError('Cannot connect to server.');
       } else {
-        setError('Wystąpił błąd rejestracji. Spróbuj ponownie.');
+        setError('Registration error occurred. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -110,15 +110,15 @@ const Register: React.FC = () => {
         username: formData.username,
         verificationCode: verificationCode
       });
-      setSuccess('Konto zweryfikowane pomyślnie! Możesz się teraz zalogować.');
+      setSuccess('Account verified successfully! You can now log in.');
       setTimeout(() => navigate('/login'), 2000);
-    } catch (err: any) {
-      if (err.response?.status === 400) {
-        setError(err.response.data || 'Nieprawidłowy kod weryfikacyjny');
-      } else if (err.response?.data?.message) {
-        setError(err.response.data.message);
+    } catch (err: unknown) {
+      if ((err as any)?.response?.status === 400) {
+        setError((err as any).response.data || 'Invalid verification code');
+      } else if ((err as any)?.response?.data?.message) {
+        setError((err as any).response.data.message);
       } else {
-        setError('Wystąpił błąd weryfikacji. Spróbuj ponownie.');
+        setError('Verification error occurred. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -130,12 +130,12 @@ const Register: React.FC = () => {
     setError('');
     try {
       await notexAPI.auth.resend({ username: formData.username });
-      setSuccess('Kod weryfikacyjny został ponownie wysłany!');
-    } catch (err: any) {
-      if (err.response?.data?.message) {
-        setError(err.response.data.message);
+      setSuccess('Verification code has been resent!');
+    } catch (err: unknown) {
+      if ((err as any)?.response?.data?.message) {
+        setError((err as any).response.data.message);
       } else {
-        setError('Nie udało się ponownie wysłać kodu weryfikacyjnego');
+        setError('Failed to resend verification code');
       }
     } finally {
       setLoading(false);

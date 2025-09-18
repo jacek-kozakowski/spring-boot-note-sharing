@@ -17,7 +17,6 @@ import {
 import type { SelectChangeEvent } from '@mui/material/Select';
 import {
   Search as SearchIcon,
-  Add as AddIcon,
   Logout,
   Dashboard as DashboardIcon,
   Groups as GroupsIcon,
@@ -126,17 +125,6 @@ const Navigation: React.FC = () => {
             Dashboard
           </Button>
 
-          <Button
-            color="inherit"
-            startIcon={<AddIcon />}
-            onClick={() => navigate('/notes/create')}
-            sx={{
-              color: isActive('/notes/create') ? 'primary.main' : 'text.primary',
-              fontWeight: isActive('/notes/create') ? 600 : 400,
-            }}
-          >
-            New Note
-          </Button>
 
           <Button
             color="inherit"
@@ -255,10 +243,6 @@ const Navigation: React.FC = () => {
             <MenuItem onClick={() => { navigate('/dashboard'); handleClose(); }}>
               <DashboardIcon sx={{ mr: 1 }} />
               Dashboard
-            </MenuItem>
-            <MenuItem onClick={() => { navigate('/notes/create'); handleClose(); }}>
-              <AddIcon sx={{ mr: 1 }} />
-              New Note
             </MenuItem>
             <MenuItem onClick={() => { navigate('/groups'); handleClose(); }}>
               <GroupsIcon sx={{ mr: 1 }} />

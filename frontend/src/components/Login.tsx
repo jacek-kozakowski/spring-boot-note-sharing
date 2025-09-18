@@ -47,21 +47,21 @@ const Login: React.FC = () => {
       await login(formData.username, formData.password);
       setSuccess('Login successful!');
       navigate('/dashboard');
-    } catch (err: any) {
-      if (err.response?.status === 401) {
-        setError('Nieprawidłowa nazwa użytkownika lub hasło');
+    } catch (err: unknown) {
+      if ((err as any)?.response?.status === 401) {
+        setError('Invalid username or password');
       }
-      else if (err.response?.status === 403) {
-        setError('Proszę zweryfikować email przed zalogowaniem');
+      else if ((err as any)?.response?.status === 403) {
+        setError('Please verify your email before logging in');
       }
-      else if (err.response?.data?.message) {
-        setError(err.response.data.message);
+      else if ((err as any)?.response?.data?.message) {
+        setError((err as any).response.data.message);
       }
-      else if (err.code === 'ECONNREFUSED') {
-        setError('Nie można połączyć się z serwerem. Spróbuj ponownie później.');
+      else if ((err as any)?.code === 'ECONNREFUSED') {
+        setError('Cannot connect to server. Please try again later.');
       }
       else {
-        setError('Wystąpił błąd podczas logowania. Spróbuj ponownie.');
+        setError('An error occurred during login. Please try again.');
       }
     } finally {
       setLoading(false);

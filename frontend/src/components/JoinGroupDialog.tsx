@@ -17,12 +17,18 @@ import type { JoinGroupRequestDto } from '../types/group';
 interface JoinGroupDialogProps {
   open: boolean;
   onClose: () => void;
+  groupId?: number;
+  groupName?: string;
+  isPrivate?: boolean;
   onSuccess: () => void;
 }
 
 const JoinGroupDialog: React.FC<JoinGroupDialogProps> = ({
   open,
   onClose,
+  groupId: propGroupId,
+  groupName,
+  isPrivate = false,
   onSuccess,
 }) => {
   const navigate = useNavigate();
@@ -30,6 +36,13 @@ const JoinGroupDialog: React.FC<JoinGroupDialogProps> = ({
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Update groupId when prop changes
+  React.useEffect(() => {
+    if (propGroupId) {
+      setGroupId(propGroupId.toString());
+    }
+  }, [propGroupId]);
 
   const handleGroupIdChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setGroupId(event.target.value);
@@ -44,14 +57,16 @@ const JoinGroupDialog: React.FC<JoinGroupDialogProps> = ({
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     
-    if (!groupId.trim()) {
+    const groupIdNum = propGroupId || parseInt(groupId.trim());
+    
+    if (!groupIdNum || isNaN(groupIdNum)) {
       setError('Group ID is required');
       return;
     }
 
-    const groupIdNum = parseInt(groupId.trim());
-    if (isNaN(groupIdNum)) {
-      setError('Group ID must be a valid number');
+    // Validate password only if group is private
+    if (isPrivate && !password.trim()) {
+      setError('Password is required for this private group');
       return;
     }
 
@@ -60,7 +75,7 @@ const JoinGroupDialog: React.FC<JoinGroupDialogProps> = ({
       setError(null);
       
       const joinData: JoinGroupRequestDto = { 
-        password: password.trim() || undefined 
+        password: isPrivate ? password.trim() : undefined 
       };
       
       await notexAPI.groups.joinGroup(groupIdNum, joinData);
@@ -91,7 +106,9 @@ const JoinGroupDialog: React.FC<JoinGroupDialogProps> = ({
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <form onSubmit={handleSubmit}>
-        <DialogTitle>Join Group</DialogTitle>
+        <DialogTitle>
+          Join Group{groupName ? `: ${groupName}` : ''}
+        </DialogTitle>
         
         <DialogContent>
           <Box sx={{ pt: 1 }}>
@@ -101,36 +118,50 @@ const JoinGroupDialog: React.FC<JoinGroupDialogProps> = ({
               </Alert>
             )}
 
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Enter the Group ID and password (if it's a private group) to join.
-            </Typography>
+            {!propGroupId && (
+              <>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  Enter the Group ID and password (if it's a private group) to join.
+                </Typography>
 
-            <TextField
-              autoFocus
-              margin="dense"
-              label="Group ID"
-              fullWidth
-              variant="outlined"
-              value={groupId}
-              onChange={handleGroupIdChange}
-              disabled={loading}
-              required
-              placeholder="Enter group ID..."
-              type="number"
-              sx={{ mb: 2 }}
-            />
+                <TextField
+                  autoFocus
+                  margin="dense"
+                  label="Group ID"
+                  fullWidth
+                  variant="outlined"
+                  value={groupId}
+                  onChange={handleGroupIdChange}
+                  disabled={loading}
+                  required
+                  placeholder="Enter group ID..."
+                  type="number"
+                  sx={{ mb: 2 }}
+                />
+              </>
+            )}
 
-            <TextField
-              margin="dense"
-              label="Group Password (if private)"
-              type="password"
-              fullWidth
-              variant="outlined"
-              value={password}
-              onChange={handlePasswordChange}
-              disabled={loading}
-              placeholder="Enter group password (optional for public groups)..."
-            />
+            {propGroupId && (
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                {groupName ? `You are joining the group "${groupName}".` : 'You are joining this group.'} 
+                {isPrivate ? ' This is a private group and requires a password.' : ' This is a public group, no password needed.'}
+              </Typography>
+            )}
+
+            {isPrivate && (
+              <TextField
+                margin="dense"
+                label="Group Password"
+                type="password"
+                fullWidth
+                variant="outlined"
+                value={password}
+                onChange={handlePasswordChange}
+                disabled={loading}
+                placeholder="Enter group password..."
+                required
+              />
+            )}
           </Box>
         </DialogContent>
 
@@ -138,13 +169,13 @@ const JoinGroupDialog: React.FC<JoinGroupDialogProps> = ({
           <Button onClick={handleClose} disabled={loading}>
             Cancel
           </Button>
-          <Button
-            type="submit"
-            variant="contained"
-            disabled={loading || !groupId.trim()}
-          >
-            {loading ? 'Joining...' : 'Join Group'}
-          </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={loading || (!propGroupId && !groupId.trim()) || (isPrivate && !password.trim())}
+            >
+              {loading ? 'Joining...' : 'Join Group'}
+            </Button>
         </DialogActions>
       </form>
     </Dialog>

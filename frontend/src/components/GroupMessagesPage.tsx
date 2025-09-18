@@ -42,8 +42,8 @@ const GroupMessagesPage: React.FC = () => {
     try {
       const response = await notexAPI.groups.getGroupById(Number(groupId));
       setGroup(response.data);
-    } catch (err: any) {
-      if (err.response?.status === 403) {
+    } catch (err: unknown) {
+      if ((err as any)?.response?.status === 403) {
         setError('You are not a member of this group. Please join the group to access messages.');
       } else {
         setError('Failed to load group');
@@ -79,8 +79,8 @@ const GroupMessagesPage: React.FC = () => {
       
       setHasMore(!messagePage.last);
       setCurrentPage(page);
-    } catch (err: any) {
-      if (err.response?.status === 403) {
+    } catch (err: unknown) {
+      if ((err as any)?.response?.status === 403) {
         setError('You are not a member of this group. Please join the group to access messages.');
       } else {
         setError('Failed to load messages');
@@ -111,11 +111,11 @@ const GroupMessagesPage: React.FC = () => {
       
       // Reload messages to get the new one
       await loadMessages(0, false);
-    } catch (err: any) {
-      if (err.response?.status === 403) {
+    } catch (err: unknown) {
+      if ((err as any)?.response?.status === 403) {
         setError('You are not a member of this group. Cannot send messages.');
-      } else if (err.response?.data?.message) {
-        setError(`Failed to send message: ${err.response.data.message}`);
+      } else if ((err as any)?.response?.data?.message) {
+        setError(`Failed to send message: ${(err as any).response.data.message}`);
       } else {
         setError('Failed to send message');
       }

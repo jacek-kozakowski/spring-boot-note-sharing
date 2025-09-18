@@ -15,8 +15,8 @@ declare module '../context/AuthContext' {
   import { FC, ReactNode } from 'react';
   
   export interface AuthContextType {
-    user: any;
-    login: (credentials: any) => Promise<any>;
+    user: unknown;
+    login: (credentials: unknown) => Promise<unknown>;
     logout: () => void;
     loading: boolean;
     isAuthenticated: boolean;
@@ -29,6 +29,6 @@ declare module '../context/AuthContext' {
 // Global types for all .jsx files
 declare module "*.jsx" {
   import { FC } from 'react';
-  const Component: FC<any>;
+  const Component: FC<unknown>;
   export default Component;
 }
