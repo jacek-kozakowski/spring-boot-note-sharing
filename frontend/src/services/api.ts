@@ -63,6 +63,7 @@ export const notexAPI = {
         deleteNoteImage: (noteId: number | string, imageId: number | string) => api.delete(`/notes/${noteId}/images/${imageId}`),
         getMyNotes: () => api.get('/users/me/notes'),
         search: (params: { query: string, filter?: string }) => api.get('/notes/search', { params }),
+        summarize: (noteId: number | string) => api.get(`/notes/${noteId}/summarize`),
     },
 
     groups: {

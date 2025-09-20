@@ -101,7 +101,7 @@ public class MessageControllerTests {
         input.setContent("Test message");
 
         doThrow(new com.notex.student_notes.config.exceptions.RateLimitExceededException("Rate limit exceeded"))
-                .when(rateLimitingService).checkRateLimit(anyString(), anyInt(), anyInt());
+                .when(rateLimitingService).checkRateLimit(anyString(), anyString(), anyInt(), anyInt());
 
         mockMvc.perform(post("/groups/1/messages")
                 .with(csrf())

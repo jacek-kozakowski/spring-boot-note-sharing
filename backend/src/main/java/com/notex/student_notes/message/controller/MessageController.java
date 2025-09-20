@@ -44,7 +44,7 @@ public class MessageController {
     @PostMapping
     public ResponseEntity<MessageDto> sendMessage(@PathVariable @Positive Long groupId, @RequestBody @Valid SendMessageDto messageToSend, HttpServletRequest request){
         String remoteAddress = request.getRemoteAddr();
-        rateLimitingService.checkRateLimit(remoteAddress, 60, 1); // 60 messages per minute
+        rateLimitingService.checkRateLimit(remoteAddress,"/groups/{groupId}/messages" ,60, 1); // 60 messages per minute
         User currentUser = getCurrentUser();
         log.info("POST /groups/{}/messages: User {} sending message to group {}.", groupId, currentUser.getUsername(), messageToSend.getContent());
         messageToSend.setGroupId(groupId);

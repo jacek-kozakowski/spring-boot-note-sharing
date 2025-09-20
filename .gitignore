@@ -38,3 +38,4 @@ docker/volumes/
 .env
 *.env
 application-local.properties
+.cursor

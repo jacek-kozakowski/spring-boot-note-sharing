@@ -113,7 +113,7 @@ public class GroupControllerTests {
         input.setPassword("password123");
 
         doThrow(new RateLimitExceededException("Rate limit exceeded"))
-                .when(rateLimitingService).checkRateLimit(anyString(), anyInt(), anyInt());
+                .when(rateLimitingService).checkRateLimit(anyString(), anyString(),anyInt(), anyInt());
 
         mockMvc.perform(post("/groups")
                         .with(csrf())
@@ -163,7 +163,7 @@ public class GroupControllerTests {
         input.setPassword("password123");
 
         doThrow(new RateLimitExceededException("Rate limit exceeded"))
-                .when(rateLimitingService).checkRateLimit(anyString(), anyInt(), anyInt());
+                .when(rateLimitingService).checkRateLimit(anyString(), anyString(),anyInt(), anyInt());
 
         mockMvc.perform(patch("/groups/1")
                         .with(csrf())
@@ -225,7 +225,7 @@ public class GroupControllerTests {
         mockToAdd.setUsername("testuser2");
 
         doThrow(new RateLimitExceededException("Rate limit exceeded"))
-                .when(rateLimitingService).checkRateLimit(anyString(), anyInt(), anyInt());
+                .when(rateLimitingService).checkRateLimit(anyString(), anyString(),anyInt(), anyInt());
 
         mockMvc.perform(post("/groups/1/members/testuser2")
                 .with(csrf()))

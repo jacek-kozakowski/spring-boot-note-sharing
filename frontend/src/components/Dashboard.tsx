@@ -25,7 +25,6 @@ import {
   Search as SearchIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Visibility as ViewIcon,
   Image as ImageIcon,
   Person as PersonIcon,
   AccessTime as TimeIcon,
@@ -277,11 +276,13 @@ const Dashboard: React.FC = () => {
                   display: 'flex',
                   flexDirection: 'column',
                   transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+                  cursor: 'pointer',
                   '&:hover': {
                     transform: 'translateY(-4px)',
                     boxShadow: 4,
                   },
                 }}
+                onClick={() => navigate(`/notes/${note.id}`)}
               >
                 <CardContent sx={{ flexGrow: 1 }}>
                   <Typography variant="h6" component="h2" gutterBottom noWrap>
@@ -329,27 +330,25 @@ const Dashboard: React.FC = () => {
 
                 <Divider />
 
-                <CardActions sx={{ justifyContent: 'space-between', p: 2 }}>
-                  <Button
-                    size="small"
-                    startIcon={<ViewIcon />}
-                    onClick={() => navigate(`/notes/${note.id}`)}
-                  >
-                    View
-                  </Button>
-                  
+                <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>
                   {note.ownerUsername === user?.username && (
                     <Box>
                       <IconButton
                         size="small"
-                        onClick={() => navigate(`/notes/${note.id}/edit`)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/notes/${note.id}/edit`);
+                        }}
                         color="primary"
                       >
                         <EditIcon />
                       </IconButton>
                       <IconButton
                         size="small"
-                        onClick={() => handleDeleteClick(note)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteClick(note);
+                        }}
                         color="error"
                       >
                         <DeleteIcon />

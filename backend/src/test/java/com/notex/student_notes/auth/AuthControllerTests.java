@@ -106,7 +106,7 @@ public class AuthControllerTests {
         input.setFirstName("First");
         input.setLastName("Last");
 
-        doThrow(new RateLimitExceededException("Rate limit exceeded")).when(rateLimitingService).checkRateLimit(anyString(), anyInt(), anyInt());
+        doThrow(new RateLimitExceededException("Rate limit exceeded")).when(rateLimitingService).checkRateLimit(anyString(), anyString(), anyInt(), anyInt());
 
         mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)

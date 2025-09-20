@@ -23,6 +23,7 @@ import {
   Person as PersonIcon,
   AccessTime as TimeIcon,
   Image as ImageIcon,
+  SmartToy as SummaryIcon,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -38,6 +39,10 @@ const NoteDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [summary, setSummary] = useState<string | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
+  const [summaryExpanded, setSummaryExpanded] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -83,6 +88,28 @@ const NoteDetail: React.FC = () => {
     } catch (err: unknown) {
       setError('Failed to delete image');
       console.error('Error deleting image:', err);
+    }
+  };
+
+  const handleSummaryClick = async () => {
+    if (!id) return;
+
+    if (summary) {
+      setSummaryExpanded(!summaryExpanded);
+      return;
+    }
+
+    try {
+      setSummaryLoading(true);
+      setSummaryError(null);
+      const response = await notexAPI.notes.summarize(id);
+      setSummary(response.data.message);
+      setSummaryExpanded(true);
+    } catch (err: unknown) {
+      setSummaryError('Failed to generate summary');
+      console.error('Error generating summary:', err);
+    } finally {
+      setSummaryLoading(false);
     }
   };
 
@@ -138,23 +165,33 @@ const NoteDetail: React.FC = () => {
             </Typography>
           </Box>
 
-          {isOwner && (
-            <Box>
-              <IconButton
-                onClick={() => navigate(`/notes/${note.id}/edit`)}
-                color="primary"
-                sx={{ mr: 1 }}
-              >
-                <EditIcon />
-              </IconButton>
-              <IconButton
-                onClick={() => setDeleteDialogOpen(true)}
-                color="error"
-              >
-                <DeleteIcon />
-              </IconButton>
-            </Box>
-          )}
+          <Box>
+            <IconButton
+              onClick={handleSummaryClick}
+              color="primary"
+              sx={{ mr: 1 }}
+              disabled={summaryLoading}
+            >
+              {summaryLoading ? <CircularProgress size={24} /> : <SummaryIcon />}
+            </IconButton>
+            {isOwner && (
+              <>
+                <IconButton
+                  onClick={() => navigate(`/notes/${note.id}/edit`)}
+                  color="primary"
+                  sx={{ mr: 1 }}
+                >
+                  <EditIcon />
+                </IconButton>
+                <IconButton
+                  onClick={() => setDeleteDialogOpen(true)}
+                  color="error"
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </>
+            )}
+          </Box>
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 3 }}>
@@ -178,18 +215,87 @@ const NoteDetail: React.FC = () => {
         </Box>
       </Box>
 
-      <Paper sx={{ p: 4, mb: 3 }}>
-        <Typography
-          variant="body1"
-          sx={{
-            whiteSpace: 'pre-wrap',
-            lineHeight: 1.6,
-            fontSize: '1.1rem',
-          }}
-        >
-          {note.content}
-        </Typography>
-      </Paper>
+      <Box sx={{ 
+        display: 'flex', 
+        gap: 3, 
+        alignItems: 'flex-start',
+        flexDirection: { xs: 'column', md: 'row' }
+      }}>
+        {/* Main Content */}
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Paper sx={{ p: 4 }}>
+            <Typography
+              variant="body1"
+              sx={{
+                whiteSpace: 'pre-wrap',
+                lineHeight: 1.6,
+                fontSize: '1.1rem',
+              }}
+            >
+              {note.content}
+            </Typography>
+          </Paper>
+        </Box>
+
+        {/* Summary Section - Right Side */}
+        {summaryExpanded && (
+          <Box sx={{ 
+            width: { xs: '100%', md: 400 }, 
+            flexShrink: 0 
+          }}>
+            <Paper sx={{ p: 3, position: 'sticky', top: 20 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <SummaryIcon sx={{ mr: 1, color: 'primary.main' }} />
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    AI Summary
+                  </Typography>
+                </Box>
+                <IconButton
+                  size="small"
+                  onClick={() => setSummaryExpanded(false)}
+                  sx={{ color: 'text.secondary' }}
+                >
+                  ×
+                </IconButton>
+              </Box>
+              
+              {summaryLoading && (
+                <Box sx={{ display: 'flex', alignItems: 'center', py: 2 }}>
+                  <CircularProgress size={20} sx={{ mr: 2 }} />
+                  <Typography variant="body2" color="text.secondary">
+                    Generating summary...
+                  </Typography>
+                </Box>
+              )}
+              
+              {summaryError && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  {summaryError}
+                </Alert>
+              )}
+              
+              {summary && (
+                <Typography
+                  variant="body2"
+                  sx={{
+                    whiteSpace: 'pre-wrap',
+                    lineHeight: 1.6,
+                    fontSize: '0.9rem',
+                    backgroundColor: 'grey.50',
+                    p: 2,
+                    borderRadius: 1,
+                    border: '1px solid',
+                    borderColor: 'grey.200',
+                  }}
+                >
+                  {summary}
+                </Typography>
+              )}
+            </Paper>
+          </Box>
+        )}
+      </Box>
 
       {note.images && note.images.length > 0 && (
         <Paper sx={{ p: 3 }}>

@@ -31,7 +31,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<UserDto> register(@RequestBody @Valid RegisterUserDto input, HttpServletRequest request){
         String remoteAddress = request.getRemoteAddr();
-        rateLimitingService.checkRateLimit(remoteAddress, 5, 1);
+        rateLimitingService.checkRateLimit(remoteAddress, "/auth/register",5, 1);
         log.info("POST /auth/register: Registering user {}.", input.getUsername());
         UserDto response = authService.register(input);
         log.debug("Success - POST /auth/register: Registered user {}.", input.getUsername());
@@ -56,7 +56,7 @@ public class AuthController {
     @PostMapping("/resend")
     public ResponseEntity<ApiResponse> resendVerification(@RequestBody @Valid ResendVerificationDto input, HttpServletRequest request){
         String remoteAddress = request.getRemoteAddr();
-        rateLimitingService.checkRateLimit(remoteAddress, 5, 1);
+        rateLimitingService.checkRateLimit(remoteAddress, "/auth/resend",5, 1);
         log.info("POST /auth/resend: Resending verification email to user {}", input.getUsername());
         authService.resendVerificationEmail(input.getUsername());
         log.debug("Success - POST /auth/resend: Resent verification email.");

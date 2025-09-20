@@ -1,5 +1,6 @@
 package com.notex.student_notes.config.security;
 
+import com.notex.student_notes.summary.exceptions.SummaryGenerationFailedException;
 import com.notex.student_notes.auth.dto.NoChangesProvidedException;
 import com.notex.student_notes.auth.exceptions.*;
 import com.notex.student_notes.config.exceptions.RateLimitExceededException;
@@ -165,5 +166,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RateLimitExceededException.class)
     public ResponseEntity<Map<String, Object>> handleRateLimitExceededException(Exception ex){
         return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS, ex.getMessage());
+    }
+    @ExceptionHandler(EmptyNoteException.class)
+    public ResponseEntity<Map<String, Object>> handleEmptyNoteException(Exception ex){
+        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+    @ExceptionHandler(SummaryGenerationFailedException.class)
+    public ResponseEntity<Map<String, Object>> handleSummaryGenerationFailedException(Exception ex){
+        return buildErrorResponse(ex, HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
     }
 }

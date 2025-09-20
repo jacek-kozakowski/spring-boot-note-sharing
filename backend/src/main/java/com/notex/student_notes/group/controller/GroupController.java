@@ -75,7 +75,7 @@ public class GroupController {
     @PostMapping
     public ResponseEntity<GroupDto> createGroup(@RequestBody @Valid CreateGroupDto input, HttpServletRequest request){
         String remoteAddress = request.getRemoteAddr();
-        rateLimitingService.checkRateLimit(remoteAddress, 5, 10);
+        rateLimitingService.checkRateLimit(remoteAddress, "/groups",5, 10);
         User currentUser = getCurrentUser();
         log.info("POST /groups: User {} creating group {}.", currentUser.getUsername(),  input.getName());
         GroupDto createdGroup = groupService.createGroup(input, currentUser);
@@ -86,7 +86,7 @@ public class GroupController {
     @PatchMapping("/{groupId}")
     public ResponseEntity<GroupDto> updateGroup(@PathVariable @Positive Long groupId, @RequestBody @Valid UpdateGroupDto input, HttpServletRequest request){
         String remoteAddress = request.getRemoteAddr();
-        rateLimitingService.checkRateLimit(remoteAddress, 5, 5);
+        rateLimitingService.checkRateLimit(remoteAddress, "/groups/{groupId}",5, 5);
         User currentUser = getCurrentUser();
         log.info("PATCH /groups/{}: User {} updating group.", groupId, currentUser.getUsername());
         GroupDto updatedGroup = groupService.updateGroup(groupId, input, currentUser);
@@ -106,7 +106,7 @@ public class GroupController {
     @PostMapping("/{groupId}/members/{username}")
     public ResponseEntity<ApiResponse> addUserToGroup(@PathVariable @Positive Long groupId, @PathVariable String username){
         User currentUser = getCurrentUser();
-        rateLimitingService.checkRateLimit(username, 5, 1);
+        rateLimitingService.checkRateLimit(username, "/groups/{groupId}/members/{username}",5, 1);
         log.info("POST /groups/{}/members/{}: User {} adding member", groupId, username, currentUser.getUsername());
         groupService.addUserToGroup(groupId, username, currentUser);
         log.debug("Success - POST /groups/{}/members/{}: User {} added member to group.", groupId, username, currentUser.getUsername());

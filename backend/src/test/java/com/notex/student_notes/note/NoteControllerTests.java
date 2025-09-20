@@ -150,7 +150,7 @@ public class NoteControllerTests {
         );
 
         doThrow(new RateLimitExceededException("Rate limit exceeded"))
-                .when(rateLimitingService).checkRateLimit(anyString(), anyInt(), anyInt());
+                .when(rateLimitingService).checkRateLimit(anyString(), anyString(), anyInt(), anyInt());
 
         mockMvc.perform(multipart("/notes")
                         .file(mockFile)
@@ -217,7 +217,7 @@ public class NoteControllerTests {
         );
 
         doThrow(new RateLimitExceededException("Rate limit exceeded"))
-                .when(rateLimitingService).checkRateLimit(anyString(), anyInt(), anyInt());
+                .when(rateLimitingService).checkRateLimit(anyString(),anyString() ,anyInt(), anyInt());
 
         mockMvc.perform(multipart("/notes/1")
                         .file(mockFile)

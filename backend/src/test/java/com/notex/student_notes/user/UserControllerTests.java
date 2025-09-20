@@ -6,6 +6,7 @@ import com.notex.student_notes.group.service.GroupService;
 import com.notex.student_notes.message.service.MessageService;
 import com.notex.student_notes.note.repository.NoteRepository;
 import com.notex.student_notes.note.service.NoteService;
+import com.notex.student_notes.summary.service.SummaryService;
 import com.notex.student_notes.upload.repository.UploadTaskRepository;
 import com.notex.student_notes.upload.service.AsyncUploadService;
 import com.notex.student_notes.upload.service.UploadService;
@@ -76,6 +77,9 @@ public class UserControllerTests {
 
     @MockitoBean
     private GroupService groupService;
+
+    @MockitoBean
+    private SummaryService summaryService;
 
     @Autowired
     private ObjectMapper mapper;

@@ -14,8 +14,12 @@ public class RateLimitingService {
 
     private final Map<String, List<LocalDateTime>> requestHistory = new ConcurrentHashMap<>();
 
-    public void checkRateLimit(String key, int limit, int windowMinutes){
-        List<LocalDateTime> timestamps = requestHistory.computeIfAbsent(key, k -> new ArrayList<>());
+    public void checkRateLimit(String address, String endpoint, int limit, int windowMinutes){
+        if (limit <= 0 || windowMinutes <= 0){
+            throw new IllegalArgumentException("Rate limiting parameters must be positive");
+        }
+        String fullKey = address + ":" + endpoint;
+        List<LocalDateTime> timestamps = requestHistory.computeIfAbsent(fullKey, k -> new ArrayList<>());
         LocalDateTime cutoff = LocalDateTime.now().minusMinutes(windowMinutes);
         
         timestamps.removeIf(time -> time.isBefore(cutoff));

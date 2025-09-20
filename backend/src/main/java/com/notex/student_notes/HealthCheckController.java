@@ -1,5 +1,6 @@
 package com.notex.student_notes;
 
+import com.notex.student_notes.config.exceptions.RateLimitExceededException;
 import jakarta.servlet.http.HttpServletRequest;
 import com.notex.student_notes.config.RateLimitingService;
 import org.springframework.http.ResponseEntity;
@@ -21,9 +22,9 @@ public class HealthCheckController {
     public ResponseEntity<String> rateLimitingHealthCheck(HttpServletRequest request) {
         String remoteAddress = request.getRemoteAddr();
         try {
-            rateLimitingService.checkRateLimit(remoteAddress, 0, 1);
+            rateLimitingService.checkRateLimit(remoteAddress, "/health/rate-limiting",0, 1);
             return ResponseEntity.ok("OK");
-        } catch (com.notex.student_notes.config.exceptions.RateLimitExceededException e) {
+        } catch (RateLimitExceededException e) {
             return ResponseEntity.status(429).body("Rate limiting is enabled");
         }
     }

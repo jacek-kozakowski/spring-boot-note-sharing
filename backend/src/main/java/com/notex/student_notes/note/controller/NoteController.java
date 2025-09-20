@@ -49,7 +49,7 @@ public class NoteController {
     @PostMapping(consumes = {"multipart/form-data"})
     public ResponseEntity<NoteDto> createNote(@ModelAttribute @Validated CreateNoteDto inputNote, HttpServletRequest request){
         String remoteAddress = request.getRemoteAddr();
-        rateLimitingService.checkRateLimit(remoteAddress, 5, 1);
+        rateLimitingService.checkRateLimit(remoteAddress, "/notes",5, 1);
         User currentUser = getCurrentUser();
         log.info("POST /notes: User {} creating a note", currentUser.getUsername());
         NoteDto response = noteService.createNote(inputNote, currentUser);
@@ -60,7 +60,7 @@ public class NoteController {
     @PatchMapping(value = "/{noteId}", consumes = {"multipart/form-data"})
     public ResponseEntity<NoteDto> updateNote(@PathVariable Long noteId, @ModelAttribute @Validated UpdateNoteDto inputNote, HttpServletRequest request){
         String remoteAddress = request.getRemoteAddr();
-        rateLimitingService.checkRateLimit(remoteAddress, 5, 1);
+        rateLimitingService.checkRateLimit(remoteAddress, "/notes/{noteId}",5, 1);
         log.info("PATCH /notes/{}: User {} updating note.", noteId, getCurrentUser().getUsername());
         User currentUser = getCurrentUser();
         NoteDto updatedNote = noteService.updateNote(noteId, inputNote, getCurrentUser());
