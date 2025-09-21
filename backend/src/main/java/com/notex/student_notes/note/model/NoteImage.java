@@ -32,7 +32,7 @@ public class NoteImage {
     @JoinColumn(name = "note_id", nullable = false)
     private Note note;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 500)
     private String filename;
 
     @Transient

@@ -1,5 +1,6 @@
-package com.notex.student_notes.summary.model;
+package com.notex.student_notes.ai.translations.model;
 
+import com.notex.student_notes.ai.translations.language.Language;
 import com.notex.student_notes.note.model.Note;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -8,28 +9,31 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-@Entity
 @Getter
 @Setter
 @NoArgsConstructor
-@Table(name = "summaries")
-public class Summary {
+@Entity
+@Table(name = "translations")
+public class Translation {
 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     private Long id;
 
     @Column(nullable = false, length = 5000)
-    private String text;
+    private String translatedText;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "note_id", nullable = false)
     private Note note;
 
-    LocalDateTime expiresAt;
+    @Enumerated(EnumType.STRING)
+    private Language language;
+
+    private LocalDateTime createdAt;
 
     @PrePersist
     protected void onCreate() {
-        this.expiresAt = LocalDateTime.now().plusDays(1);
+        this.createdAt = LocalDateTime.now();
     }
 }

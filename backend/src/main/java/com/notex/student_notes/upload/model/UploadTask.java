@@ -24,8 +24,10 @@ public class UploadTask {
     private Long id;
 
     @NotBlank
+    @Column(length = 500)
     private String filename;
     @NotBlank
+    @Column(length = 500)
     private String originalFilename;
     @NotBlank
     private String contentType;
@@ -43,10 +45,12 @@ public class UploadTask {
     @Enumerated(EnumType.STRING)
     private UploadStatus status = UploadStatus.PENDING;
 
+    @Column(length = 1000)
     private String errorMessage;
     private int retryCount = 0;
     private static final int MAX_RETRIES = 3;
 
+    @Column(length = 1000)
     private String tempFilePath;
 
     private LocalDateTime createdAt;

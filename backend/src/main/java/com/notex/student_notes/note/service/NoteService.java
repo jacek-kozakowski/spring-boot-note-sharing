@@ -1,7 +1,7 @@
 package com.notex.student_notes.note.service;
 
 import com.notex.student_notes.auth.dto.NoChangesProvidedException;
-import com.notex.student_notes.group.exceptions.UserNotGroupOwnerException;
+import com.notex.student_notes.config.metrics.CustomMetrics;
 import com.notex.student_notes.minio.service.MinioService;
 import com.notex.student_notes.note.dto.CreateNoteDto;
 import com.notex.student_notes.note.dto.NoteDto;
@@ -20,11 +20,13 @@ import com.notex.student_notes.user.model.User;
 import com.notex.student_notes.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import io.micrometer.core.instrument.Timer;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -39,6 +41,7 @@ public class NoteService {
     private final NoteMapper noteMapper;
     private final MinioService minioService;
     private final UploadService uploadService;
+    private final CustomMetrics customMetrics;
 
     private static final Filter FILTER_FOR_USER = Filter.ACTIVE;
 
@@ -79,6 +82,9 @@ public class NoteService {
         return userNotes;
     }
 
+
+    // Cache disabled for getNoteById to ensure fresh data with images
+    // @Cacheable(value = "notes", key = "#id")
     public NoteDto getNoteById(Long id){
         log.info("Fetching note {}", id);
         NoteDto note = noteMapper.toDto(findNoteById(id));
@@ -88,6 +94,7 @@ public class NoteService {
 
     @Transactional
     public NoteDto createNote(CreateNoteDto inputNote, User owner){
+        Timer.Sample sample = customMetrics.startNoteProcessingTimer();
         log.info("User {} creating a note.", owner.getUsername());
         Note noteToCreate = new Note(inputNote, owner);
         Note createdNote = noteRepository.save(noteToCreate);
@@ -109,9 +116,12 @@ public class NoteService {
         log.debug("Success - User {} created note {} with {} images queued for upload",
                 owner.getUsername(), createdNote.getId(),
                 inputNote.getImages() != null ? inputNote.getImages().size() : 0);
+        sample.stop(customMetrics.getNoteProcessingTimer());
+        customMetrics.incrementNoteCreatedCounter();
         return noteMapper.toDto(createdNote);
     }
 
+    @CachePut(value = "notes", key = "#id")
     @Transactional
     public NoteDto updateNote(Long id, UpdateNoteDto inputNote, User currentUser){
         log.info("Updating note {}", id);
@@ -171,9 +181,11 @@ public class NoteService {
         Note updatedNote = noteRepository.save(noteToUpdate);
         NoteDto updatedNoteDto = noteMapper.toDto(updatedNote);
         log.debug("Success - note {} updated.", id);
+        customMetrics.incrementNoteUpdatedCounter();
         return updatedNoteDto;
     }
 
+    @CacheEvict(value = "notes", key = "#id")
     @Transactional
     public void deleteNote(Long id, User currentUser) {
         log.info("Deleting note {}", id );
@@ -194,8 +206,10 @@ public class NoteService {
         }
         noteRepository.save(noteToDelete);
         log.debug("Success - Note {} deleted.", id);
+        customMetrics.incrementNoteDeletedCounter();
     }
 
+    @CacheEvict(value = "notes", key = "#noteId")
     @Transactional
     public void deleteNoteImage(Long noteId, Long imageId, User currentUser) {
         log.info("Deleting note image {} from note {}", imageId, noteId);

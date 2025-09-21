@@ -64,6 +64,7 @@ export const notexAPI = {
         getMyNotes: () => api.get('/users/me/notes'),
         search: (params: { query: string, filter?: string }) => api.get('/notes/search', { params }),
         summarize: (noteId: number | string) => api.get(`/notes/${noteId}/summarize`),
+        translate: (noteId: number | string, language: string) => api.get(`/notes/${noteId}/translate`, { params: { language } }),
     },
 
     groups: {

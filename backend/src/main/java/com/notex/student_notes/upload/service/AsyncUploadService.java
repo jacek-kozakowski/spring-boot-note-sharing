@@ -9,17 +9,21 @@ import com.notex.student_notes.upload.model.UploadTask;
 import com.notex.student_notes.upload.repository.UploadTaskRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
@@ -29,6 +33,9 @@ public class AsyncUploadService {
     private final UploadTaskRepository uploadTaskRepository;
     private final MinioService minioService;
     private final NoteImageRepository noteImageRepository;
+    
+    // Synchronization map to prevent race conditions for index calculation
+    private final Map<Long, Object> noteLocks = new ConcurrentHashMap<>();
 
     @Async("uploadTaskExecutor")
     @Retryable(retryFor = {Exception.class}, maxAttempts = 3, backoff = @Backoff(delay = 2000))
@@ -60,9 +67,13 @@ public class AsyncUploadService {
                 NoteImage noteImage = new NoteImage();
                 noteImage.setNote(task.getNote());
                 noteImage.setFilename(uploadedFilename);
-                noteImage.setIndex(getNextIndexForNote(task.getNote().getId()));
+                // Use timestamp as unique index to avoid race conditions
+                noteImage.setIndex((int) System.currentTimeMillis());
 
                 noteImageRepository.save(noteImage);
+
+                // Clear cache for the note to ensure fresh data with images
+                evictNoteCache(task.getNote().getId());
 
                 log.info("Successfully uploaded file {} for task {}", uploadedFilename, taskId);
             }
@@ -114,11 +125,28 @@ public class AsyncUploadService {
         }
     }
 
-    private int getNextIndexForNote(Long noteId) {
-        return noteImageRepository.findByNote_IdOrderByIndexDesc(noteId)
-            .stream()
-            .findFirst()
-            .map(img -> img.getIndex() + 1)
-            .orElse(0);
+    @CacheEvict(value = "notes", key = "#noteId")
+    public void evictNoteCache(Long noteId) {
+        log.debug("Evicting cache for note {}", noteId);
+    }
+
+
+    @Transactional
+    private int getNextIndexForNoteSync(Long noteId) {
+        // Use synchronized block to prevent race conditions
+        Object lock = noteLocks.computeIfAbsent(noteId, k -> new Object());
+        
+        synchronized (lock) {
+            try {
+                return noteImageRepository.findByNote_IdOrderByIndexDesc(noteId)
+                    .stream()
+                    .findFirst()
+                    .map(img -> img.getIndex() + 1)
+                    .orElse(0);
+            } finally {
+                // Clean up lock after use to prevent memory leaks
+                noteLocks.remove(noteId, lock);
+            }
+        }
     }
 }

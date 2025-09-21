@@ -1,4 +1,4 @@
-package com.notex.student_notes.summary.exceptions;
+package com.notex.student_notes.ai.summary.exceptions;
 
 public class SummaryGenerationFailedException extends RuntimeException{
 

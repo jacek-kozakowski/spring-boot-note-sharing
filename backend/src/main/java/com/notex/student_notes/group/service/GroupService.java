@@ -10,6 +10,9 @@ import com.notex.student_notes.user.model.User;
 import com.notex.student_notes.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +30,7 @@ public class GroupService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+    @Cacheable(value = "groups", key = "#groupId")
     public GroupDto getGroupById(Long groupId){
         log.info("Fetching group {}", groupId);
         Group group = findGroupById(groupId);
@@ -92,6 +96,7 @@ public class GroupService {
         return group.getMembers().stream().map(UserDto::new).toList();
     }
 
+    @CachePut(value = "groups", key = "#result.id")
     @Transactional
     public GroupDto createGroup(CreateGroupDto input, User owner){
         log.info("Creating group {}", input.getName());
@@ -118,6 +123,7 @@ public class GroupService {
     }
 
 
+    @CacheEvict(value = "groups", key = "#id")
     @Transactional
     public void deleteGroupById(Long id, User currentUser){
         log.info("Deleting group {}", id);
@@ -135,6 +141,7 @@ public class GroupService {
         log.debug("Success - Group {} deleted", id);
     }
 
+    @CachePut(value = "groups", key = "#id")
     @Transactional
     public GroupDto updateGroup(Long id, UpdateGroupDto input, User currentUser){
         if (!isUserGroupOwner(id, currentUser)){
@@ -194,6 +201,7 @@ public class GroupService {
         return updatedGroupDto;
     }
 
+    @CacheEvict(value = "groups", key = "#groupId")
     @Transactional
     public void joinGroup(Long groupId, JoinGroupRequestDto request, User user){
         if (groupId == null){
@@ -224,6 +232,7 @@ public class GroupService {
         log.debug("Success - User {} joined group {}", user.getUsername(), groupId);
     }
 
+    @CacheEvict(value = "groups", key = "#groupId")
     @Transactional
     public void addUserToGroup(Long groupId, String username, User currentUser){
         if (!isUserGroupOwner(groupId, currentUser)){
@@ -244,6 +253,7 @@ public class GroupService {
         log.debug("Success - User {} added to group {}", username, groupId);
     }
 
+    @CacheEvict(value = "groups", key = "#groupId")
     @Transactional
     public void removeUserFromGroup(Long groupId, String username, User currentUser){
         if (!isUserGroupOwner(groupId, currentUser)){
@@ -266,6 +276,7 @@ public class GroupService {
     }
 
 
+    @CacheEvict(value = "groups", key = "#groupId")
     @Transactional
     public void leaveGroup(Long groupId, User user){
         log.info("{} leaving group {}",user.getUsername(),  groupId);

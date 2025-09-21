@@ -1,6 +1,6 @@
-package com.notex.student_notes.summary.repository;
+package com.notex.student_notes.ai.summary.repository;
 
-import com.notex.student_notes.summary.model.Summary;
+import com.notex.student_notes.ai.summary.model.Summary;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

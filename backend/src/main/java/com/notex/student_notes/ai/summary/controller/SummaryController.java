@@ -1,6 +1,6 @@
-package com.notex.student_notes.summary.controller;
+package com.notex.student_notes.ai.summary.controller;
 
-import com.notex.student_notes.summary.service.SummaryService;
+import com.notex.student_notes.ai.summary.service.SummaryService;
 import com.notex.student_notes.config.RateLimitingService;
 import com.notex.student_notes.group.dto.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;

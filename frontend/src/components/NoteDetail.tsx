@@ -15,6 +15,10 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -24,11 +28,13 @@ import {
   AccessTime as TimeIcon,
   Image as ImageIcon,
   SmartToy as SummaryIcon,
+  Translate as TranslateIcon,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { notexAPI } from '../services/api';
 import type { Note } from '../types/note';
+import { Language, LANGUAGE_OPTIONS } from '../types/translation';
 
 const NoteDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -43,6 +49,11 @@ const NoteDetail: React.FC = () => {
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState<string | null>(null);
   const [summaryExpanded, setSummaryExpanded] = useState(false);
+  const [translation, setTranslation] = useState<string | null>(null);
+  const [translationLoading, setTranslationLoading] = useState(false);
+  const [translationError, setTranslationError] = useState<string | null>(null);
+  const [translationExpanded, setTranslationExpanded] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState<Language>(Language.EN);
 
   useEffect(() => {
     if (id) {
@@ -99,6 +110,11 @@ const NoteDetail: React.FC = () => {
       return;
     }
 
+    // Close translation if open
+    if (translationExpanded) {
+      setTranslationExpanded(false);
+    }
+
     try {
       setSummaryLoading(true);
       setSummaryError(null);
@@ -110,6 +126,30 @@ const NoteDetail: React.FC = () => {
       console.error('Error generating summary:', err);
     } finally {
       setSummaryLoading(false);
+    }
+  };
+
+  const handleTranslationClick = async () => {
+    if (!id) return;
+
+    // Close summary if open
+    if (summaryExpanded) {
+      setSummaryExpanded(false);
+    }
+
+    // Always expand translation panel
+    setTranslationExpanded(true);
+
+    try {
+      setTranslationLoading(true);
+      setTranslationError(null);
+      const response = await notexAPI.notes.translate(id, selectedLanguage);
+      setTranslation(response.data.message);
+    } catch (err: unknown) {
+      setTranslationError('Failed to translate note');
+      console.error('Error translating note:', err);
+    } finally {
+      setTranslationLoading(false);
     }
   };
 
@@ -155,8 +195,8 @@ const NoteDetail: React.FC = () => {
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       <Box sx={{ mb: 4 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, flexWrap: 'wrap', gap: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 200 }}>
             <IconButton onClick={() => navigate('/dashboard')} sx={{ mr: 1 }}>
               <ArrowBackIcon />
             </IconButton>
@@ -165,27 +205,54 @@ const NoteDetail: React.FC = () => {
             </Typography>
           </Box>
 
-          <Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
             <IconButton
               onClick={handleSummaryClick}
               color="primary"
-              sx={{ mr: 1 }}
               disabled={summaryLoading}
+              title="AI Summary"
             >
               {summaryLoading ? <CircularProgress size={24} /> : <SummaryIcon />}
             </IconButton>
+            
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <FormControl size="small" sx={{ minWidth: 120 }}>
+                <InputLabel>Language</InputLabel>
+                <Select
+                  value={selectedLanguage}
+                  label="Language"
+                  onChange={(e) => setSelectedLanguage(e.target.value as Language)}
+                >
+                  {LANGUAGE_OPTIONS.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <IconButton
+                onClick={handleTranslationClick}
+                color="secondary"
+                disabled={translationLoading}
+                title="Translate"
+              >
+                {translationLoading ? <CircularProgress size={24} /> : <TranslateIcon />}
+              </IconButton>
+            </Box>
+            
             {isOwner && (
               <>
                 <IconButton
                   onClick={() => navigate(`/notes/${note.id}/edit`)}
                   color="primary"
-                  sx={{ mr: 1 }}
+                  title="Edit Note"
                 >
                   <EditIcon />
                 </IconButton>
                 <IconButton
                   onClick={() => setDeleteDialogOpen(true)}
                   color="error"
+                  title="Delete Note"
                 >
                   <DeleteIcon />
                 </IconButton>
@@ -222,7 +289,11 @@ const NoteDetail: React.FC = () => {
         flexDirection: { xs: 'column', md: 'row' }
       }}>
         {/* Main Content */}
-        <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Box sx={{ 
+          flex: 1, 
+          minWidth: 0,
+          maxWidth: { xs: '100%', md: summaryExpanded || translationExpanded ? 'calc(100% - 400px)' : '100%' }
+        }}>
           <Paper sx={{ p: 4 }}>
             <Typography
               variant="body1"
@@ -290,6 +361,93 @@ const NoteDetail: React.FC = () => {
                   }}
                 >
                   {summary}
+                </Typography>
+              )}
+            </Paper>
+          </Box>
+        )}
+
+        {/* Translation Section - Right Side */}
+        {translationExpanded && (
+          <Box sx={{ 
+            width: { xs: '100%', md: 400 }, 
+            flexShrink: 0 
+          }}>
+            <Paper sx={{ p: 3, position: 'sticky', top: 20 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                  <TranslateIcon sx={{ mr: 1, color: 'secondary.main' }} />
+                  <Typography variant="h6" sx={{ fontWeight: 600, mr: 2 }}>
+                    Translation
+                  </Typography>
+                </Box>
+                <IconButton
+                  size="small"
+                  onClick={() => setTranslationExpanded(false)}
+                  sx={{ color: 'text.secondary' }}
+                >
+                  ×
+                </IconButton>
+              </Box>
+              
+              {translationLoading && (
+                <Box sx={{ display: 'flex', alignItems: 'center', py: 2 }}>
+                  <CircularProgress size={20} sx={{ mr: 2 }} />
+                  <Typography variant="body2" color="text.secondary">
+                    Translating...
+                  </Typography>
+                </Box>
+              )}
+              
+              {translationError && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  {translationError}
+                </Alert>
+              )}
+
+              {!translation && !translationLoading && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    startIcon={<TranslateIcon />}
+                    onClick={handleTranslationClick}
+                    disabled={translationLoading}
+                  >
+                    Translate to {LANGUAGE_OPTIONS.find(opt => opt.value === selectedLanguage)?.label}
+                  </Button>
+                </Box>
+              )}
+              
+              {translation && !translationLoading && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+                  <Button
+                    variant="outlined"
+                    color="secondary"
+                    startIcon={<TranslateIcon />}
+                    onClick={handleTranslationClick}
+                    disabled={translationLoading}
+                  >
+                    Translate Again
+                  </Button>
+                </Box>
+              )}
+              
+              {translation && (
+                <Typography
+                  variant="body2"
+                  sx={{
+                    whiteSpace: 'pre-wrap',
+                    lineHeight: 1.6,
+                    fontSize: '0.9rem',
+                    backgroundColor: 'grey.50',
+                    p: 2,
+                    borderRadius: 1,
+                    border: '1px solid',
+                    borderColor: 'grey.200',
+                  }}
+                >
+                  {translation}
                 </Typography>
               )}
             </Paper>

@@ -3,6 +3,7 @@ package com.notex.student_notes.minio.service;
 import com.notex.student_notes.note.exceptions.NoteImageUploadException;
 import io.minio.*;
 import io.minio.http.Method;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 @Service
+@Getter
 @Slf4j
 public class MinioService {
 
@@ -113,6 +115,15 @@ public class MinioService {
             log.error("Error generating presigned URL for file: {}", filename, e);
             // Fallback to direct URL
             return url + "/" + bucketName + "/" + filename;
+        }
+    }
+
+    public boolean isHealthy(){
+        try{
+            return minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
+        }catch (Exception e){
+            log.error("MinIO health check failed", e);
+            return false;
         }
     }
 }

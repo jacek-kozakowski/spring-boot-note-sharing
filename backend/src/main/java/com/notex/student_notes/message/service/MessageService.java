@@ -13,6 +13,8 @@ import com.notex.student_notes.message.repository.MessageRepository;
 import com.notex.student_notes.user.model.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -26,6 +28,7 @@ public class MessageService {
     private final MessageRepository messageRepository;
     private final GroupRepository groupRepository;
 
+    @Cacheable(value = "messages", key = "#groupId + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
     public Page<MessageDto> getMessagesByGroupId(Long groupId, User currentUser, Pageable pageable){
         log.info("Fetching messages for group {}", groupId);
         if (UserNotInGroup(findGroupById(groupId), currentUser)){
@@ -37,6 +40,7 @@ public class MessageService {
         return groupMessages.map(MessageDto::new);
     }
 
+    @CacheEvict(value = "messages", key = "#message.groupId + '-*'", allEntries = true)
     @Transactional
     public MessageDto sendMessage(SendMessageDto message, User sender){
         log.info("Sending message {} to group {}", message.getContent(), message.getGroupId());
