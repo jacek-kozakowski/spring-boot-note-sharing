@@ -101,15 +101,11 @@ public class NoteService {
 
         if (inputNote.getImages() != null && !inputNote.getImages().isEmpty()){
             log.info("Queuing {} images for async upload to note {}", inputNote.getImages().size(), createdNote.getId());
-            for (MultipartFile file : inputNote.getImages()) {
-                if (!file.isEmpty()) {
-                    try {
-                        uploadService.queueUpload(createdNote.getId(), file, owner);
-                        log.debug("Queued image {} for upload", file.getOriginalFilename());
-                    } catch (Exception e) {
-                        log.error("Failed to queue image {} for upload: {}", file.getOriginalFilename(), e.getMessage());
-                    }
-                }
+            try {
+                uploadService.queueUpload(createdNote.getId(), inputNote.getImages(), owner);
+                log.debug("Queued {} images for upload", inputNote.getImages().size());
+            } catch (Exception e) {
+                log.error("Failed to queue images for upload: {}", e.getMessage());
             }
         }
 
@@ -164,17 +160,12 @@ public class NoteService {
             log.info("Queuing {} new images for async upload to note {}", inputNote.getNewImages().size(), id);
             User noteOwner = noteToUpdate.getOwner();
 
-            for (MultipartFile file : inputNote.getNewImages()) {
-                if (!file.isEmpty()) {
-                    try {
-                        uploadService.queueUpload(id, file, noteOwner);
-                        log.debug("Queued new image {} for upload to note {}", file.getOriginalFilename(), id);
-                    } catch (Exception e) {
-                        log.error("Failed to queue image {} for upload: {}", file.getOriginalFilename(), e.getMessage());
-                    }
-                }
+            try {
+                uploadService.queueUpload(id, inputNote.getNewImages(), noteOwner);
+                log.debug("Success - Queued {} new images for async upload.", inputNote.getNewImages().size());
+            } catch (Exception e) {
+                log.error("Failed to queue images for upload: {}", e.getMessage());
             }
-            log.debug("Success - Queued {} new images for async upload.", inputNote.getNewImages().size());
         }
         noteToUpdate.setUpdatedAt(LocalDateTime.now());
         normalizeImageIndexes(noteToUpdate);

@@ -1,5 +1,8 @@
 FROM openjdk:21-jdk-slim
 
+# Install docker client and netcat
+RUN apt-get update && apt-get install -y docker.io netcat-openbsd && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 COPY mvnw .
@@ -11,10 +14,12 @@ RUN chmod +x mvnw
 RUN ./mvnw dependency:go-offline -B
 
 COPY src ./src
+COPY start.sh .
 
 RUN ./mvnw clean package -DskipTests
+RUN chmod +x start.sh
 
 EXPOSE 8080
 
-CMD ["java", "-jar", "target/student_notes-0.0.1-SNAPSHOT.jar"]
+CMD ["./start.sh"]
 

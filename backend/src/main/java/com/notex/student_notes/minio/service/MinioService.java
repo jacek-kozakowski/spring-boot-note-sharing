@@ -1,129 +1,102 @@
 package com.notex.student_notes.minio.service;
 
-import com.notex.student_notes.note.exceptions.NoteImageUploadException;
-import io.minio.*;
-import io.minio.http.Method;
-import lombok.Getter;
+import io.minio.MinioClient;
+import io.minio.PutObjectArgs;
+import io.minio.BucketExistsArgs;
+import io.minio.MakeBucketArgs;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
-import java.util.Map;
-import java.util.Set;
+import java.util.UUID;
 
-@Service
-@Getter
 @Slf4j
+@Service
+@RequiredArgsConstructor
 public class MinioService {
 
     private final MinioClient minioClient;
-    private final String bucketName;
-    private final String url;
-    private final Map<String, Set<String>> ALLOWED_TYPES = Map.of(
-            ".png", Set.of("image/png"),
-            ".jpg", Set.of("image/jpeg"),
-            ".jpeg", Set.of("image/jpeg"),
-            ".pdf", Set.of("application/pdf"),
-            ".pptx", Set.of("application/vnd.openxmlformats-officedocument.presentationml.presentation"),
-            ".docx", Set.of("application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
-            ".txt", Set.of("text/plain")
-    );
-    private static final long MAX_FILE_SIZE = 1024 * 1024 * 10;
 
+    @Value("${minio.bucket-name:notex-notes}")
+    private String bucketName;
 
-    public MinioService(@Value("${minio.url}") String url,
-                        @Value("${minio.access-key}") String accessKey,
-                        @Value("${minio.secret-key}") String secretKey,
-                        @Value("${minio.bucket-name}") String bucketName
-    ) throws Exception {
-        this.url = url.endsWith("/") ? url.substring(0, url.length() - 1) : url;
-        this.minioClient = MinioClient.builder()
-                .endpoint(url)
-                .credentials(accessKey, secretKey)
-                .build();
-        this.bucketName = bucketName;
-        boolean exists = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
-        if (!exists) {
-            minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
-        }
-    }
+    @Value("${minio.public-url:http://localhost:9000}")
+    private String publicUrl;
 
-    public String uploadFile(String fileName, InputStream inputStream, long size, String contentType) throws Exception{
-        log.info("Uploading file {} to bucket {}", fileName, bucketName);
-
-        if (size > MAX_FILE_SIZE) {
-            log.warn("Upload rejected - File size too large.");
-            throw new NoteImageUploadException("Upload rejected. Max file size: " + MAX_FILE_SIZE / 1024 / 1024 + "MB");
-        }
-
-        if (!isAllowed(fileName, contentType)) {
-            log.warn("Upload rejected - File extension not allowed.");
-            throw new NoteImageUploadException("Upload rejected. Allowed extensions:" + String.join(",", ALLOWED_TYPES.keySet()));
-        }
-
-        minioClient.putObject(
-                PutObjectArgs.builder()
-                        .bucket(bucketName)
-                        .object(fileName)
-                        .stream(inputStream, size, -1)
-                        .contentType(contentType)
-                        .build()
-        );
-        return fileName;
-    }
-
-    public InputStream getFile(String filename) throws Exception{
-        return minioClient.getObject(
-                GetObjectArgs.builder()
-                        .bucket(bucketName)
-                        .object(filename)
-                        .build()
-        );
-    }
-    public void deleteFile(String filename) throws Exception {
-        minioClient.removeObject(
-                RemoveObjectArgs.builder()
-                        .bucket(bucketName)
-                        .object(filename)
-                        .build()
-        );
-    }
-
-    private boolean isAllowed(String filename, String contentType){
-        int dotIndex = filename.lastIndexOf(".");
-        if (dotIndex == -1) {
-            return false;
-        }
-        String extension = filename.substring(dotIndex).toLowerCase();
-        return ALLOWED_TYPES.containsKey(extension)
-                && ALLOWED_TYPES.get(extension).contains(contentType);
-    }
-
-    public String getFileUrl(String filename){
+    public String uploadFile(String originalFilename, InputStream inputStream, long fileSize, String contentType) {
         try {
-            // Generate presigned URL valid for 7 days
-            return minioClient.getPresignedObjectUrl(
-                GetPresignedObjectUrlArgs.builder()
-                    .method(Method.GET)
+            ensureBucketExists();
+            
+            String filename = generateUniqueFilename(originalFilename);
+            
+            minioClient.putObject(
+                PutObjectArgs.builder()
                     .bucket(bucketName)
                     .object(filename)
-                    .expiry(7 * 24 * 60 * 60) // 7 days
+                    .stream(inputStream, fileSize, -1)
+                    .contentType(contentType)
+                    .build()
+            );
+            
+            log.info("File uploaded successfully: {}", filename);
+            return filename;
+            
+        } catch (Exception e) {
+            log.error("Failed to upload file: {}", e.getMessage());
+            throw new RuntimeException("Failed to upload file", e);
+        }
+    }
+
+    public String getFileUrl(String filename) {
+        return publicUrl + "/" + bucketName + "/" + filename;
+    }
+
+    public boolean isHealthy() {
+        try {
+            return minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public String getBucketName() {
+        return bucketName;
+    }
+
+    public void deleteFile(String filename) {
+        try {
+            minioClient.removeObject(
+                io.minio.RemoveObjectArgs.builder()
+                    .bucket(bucketName)
+                    .object(filename)
                     .build()
             );
         } catch (Exception e) {
-            log.error("Error generating presigned URL for file: {}", filename, e);
-            // Fallback to direct URL
-            return url + "/" + bucketName + "/" + filename;
+            throw new RuntimeException("Failed to delete file: " + filename, e);
         }
     }
 
-    public boolean isHealthy(){
-        try{
-            return minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
-        }catch (Exception e){
-            log.error("MinIO health check failed", e);
-            return false;
+    private void ensureBucketExists() {
+        try {
+            boolean exists = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
+            if (!exists) {
+                minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+                log.info("Created bucket: {}", bucketName);
+            }
+        } catch (Exception e) {
+            log.error("Failed to ensure bucket exists: {}", e.getMessage());
+            throw new RuntimeException("Failed to ensure bucket exists", e);
         }
+    }
+
+    private String generateUniqueFilename(String originalFilename) {
+        String extension = "";
+        int lastDotIndex = originalFilename.lastIndexOf('.');
+        if (lastDotIndex > 0) {
+            extension = originalFilename.substring(lastDotIndex);
+        }
+        return UUID.randomUUID().toString() + extension;
     }
 }

@@ -100,7 +100,7 @@ public class UserController {
     }
     @GetMapping("/{username}/notes/admin")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<NoteDto>> getUserNotesAdmin(@PathVariable String username, @RequestParam(required = false, defaultValue = "all") Filter filter){
+    public ResponseEntity<List<NoteDto>> getUserNotesAdmin(@PathVariable String username, @RequestParam(required = false, defaultValue = "ALL") Filter filter){
         String adminUsername = getCurrentUser().getUsername();
         log.info("GET /users/{}/notes/admin: Admin {} fetching user's notes.", username, adminUsername);
         ResponseEntity<List<NoteDto>> response = ResponseEntity.ok(noteService.getUsersNotesAdmin(username, filter));
