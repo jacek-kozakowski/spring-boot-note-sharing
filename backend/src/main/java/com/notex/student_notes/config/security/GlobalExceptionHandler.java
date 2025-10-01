@@ -3,6 +3,8 @@ package com.notex.student_notes.config.security;
 import com.notex.student_notes.ai.summary.exceptions.SummaryGenerationFailedException;
 import com.notex.student_notes.auth.dto.NoChangesProvidedException;
 import com.notex.student_notes.auth.exceptions.*;
+import com.notex.student_notes.config.ai.AiNotEnabledException;
+import com.notex.student_notes.config.ai.CallsLimitExceededException;
 import com.notex.student_notes.config.ratelimiting.RateLimitExceededException;
 import com.notex.student_notes.group.exceptions.*;
 import com.notex.student_notes.note.exceptions.*;
@@ -174,5 +176,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(SummaryGenerationFailedException.class)
     public ResponseEntity<Map<String, Object>> handleSummaryGenerationFailedException(Exception ex){
         return buildErrorResponse(ex, HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+    }
+    @ExceptionHandler(AiNotEnabledException.class)
+    public ResponseEntity<Map<String, Object>> handleAiNotEnabledException(Exception ex){
+        return buildErrorResponse(ex, HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
+    }
+    @ExceptionHandler(CallsLimitExceededException.class)
+    public ResponseEntity<Map<String, Object>> handleCallsLimitExceededException(Exception ex){
+        return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS, ex.getMessage());
     }
 }

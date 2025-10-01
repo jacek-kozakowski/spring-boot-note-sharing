@@ -10,9 +10,7 @@ public class NoOpClient implements ChatModel {
 
     @Override
     public ChatResponse call(Prompt prompt) {
-        String fallback = "AI is disabled: no API key configured. Please enable AI to use this feature.";
-        Generation gen = new Generation(new AssistantMessage(fallback));
-        return new ChatResponse(java.util.List.of(gen));
+        throw new AiNotEnabledException("AI functionality is not enabled. Please configure the API key to use AI features.");
     }
 
 }
