@@ -4,6 +4,7 @@ import com.notex.student_notes.ai.translations.exceptions.TranslationException;
 import com.notex.student_notes.ai.translations.language.Language;
 import com.notex.student_notes.ai.translations.model.Translation;
 import com.notex.student_notes.ai.translations.repository.TranslationRepository;
+import com.notex.student_notes.config.ai.AiCallsLimitingService;
 import com.notex.student_notes.note.exceptions.EmptyNoteException;
 import com.notex.student_notes.note.exceptions.NoteDeletedException;
 import com.notex.student_notes.note.exceptions.NoteNotFoundException;
@@ -12,6 +13,7 @@ import com.notex.student_notes.note.repository.NoteRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +28,8 @@ public class TranslationService {
     private final TranslationRepository translationRepository;
     private final NoteRepository noteRepository;
     private final ChatClient chatClient;
+    private final AiCallsLimitingService aiCallsLimitingService;
+
     private static final String TRANSLATION_PROMPT =
         """
         You are a professional translator.
@@ -40,7 +44,6 @@ public class TranslationService {
         - If the note contains any illegal content, slurs, or anything non-educational,
           do not translate. Instead reply exactly with:
           "Sorry, I cannot translate this text. Reason: <explanation>"
-          
         Note to translate:
         ---
         %s
@@ -50,19 +53,31 @@ public class TranslationService {
 
     @Transactional
     @Cacheable(value = "translations", key = "T(String).valueOf(#noteId) + ':' + #language")
-    public String translateNote(Long noteId, Language language){
+    public String translateNote(Long noteId, Language language, String address){
         Optional<Translation> translation = translationRepository.findByNoteIdAndLanguage(noteId, language);
         if (translation.isPresent()){
             Translation existingTranslation = translation.get();
             if (existingTranslation.getCreatedAt().isAfter(existingTranslation.getNote().getUpdatedAt())){
                 return existingTranslation.getTranslatedText();
             }else{
-                translationRepository.delete(existingTranslation);
+                translationRepository.deleteByNoteIdAndLanguage(noteId, language);
+                translationRepository.flush();
                 log.info("Existing translation for note {} in language {} is outdated. Generating a new one.", noteId, language);
             }
         }
+
         Note note = getNoteIfValid(noteId);
-        String translationText = getTranslation(note.getContent(), language);
+
+        aiCallsLimitingService.checkAiCalls(address);
+
+        String translationText = getTranslation(note, language);
+
+        log.debug("Success - Note {} translated to language {}", noteId, language);
+        return translationText;
+    }
+
+    private String getTranslation(Note note, Language language){
+        String translationText = callForTranslation(note.getContent(), language);
         Translation newTranslation = new Translation();
         newTranslation.setNote(note);
         newTranslation.setLanguage(language);
@@ -71,7 +86,8 @@ public class TranslationService {
         return translationText;
     }
 
-    private String getTranslation(String noteText, Language language){
+
+    private String callForTranslation(String noteText, Language language){
         String translation;
         try{
             String prompt = TRANSLATION_PROMPT.formatted(

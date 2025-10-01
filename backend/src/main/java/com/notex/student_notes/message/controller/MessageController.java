@@ -1,6 +1,6 @@
 package com.notex.student_notes.message.controller;
 
-import com.notex.student_notes.config.RateLimitingService;
+import com.notex.student_notes.config.ratelimiting.RateLimitingService;
 import com.notex.student_notes.message.dto.MessageDto;
 import com.notex.student_notes.message.dto.SendMessageDto;
 import com.notex.student_notes.message.service.MessageService;

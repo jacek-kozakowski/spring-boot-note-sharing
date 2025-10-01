@@ -3,7 +3,7 @@ package com.notex.student_notes.auth.controller;
 
 import com.notex.student_notes.auth.dto.*;
 import com.notex.student_notes.auth.service.AuthService;
-import com.notex.student_notes.config.RateLimitingService;
+import com.notex.student_notes.config.ratelimiting.RateLimitingService;
 import com.notex.student_notes.group.dto.ApiResponse;
 import com.notex.student_notes.user.dto.UserDto;
 import jakarta.servlet.http.HttpServletRequest;

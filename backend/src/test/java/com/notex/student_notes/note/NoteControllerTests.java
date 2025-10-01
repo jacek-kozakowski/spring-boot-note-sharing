@@ -2,13 +2,13 @@ package com.notex.student_notes.note;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.notex.student_notes.auth.security.JwtAuthFilter;
-import com.notex.student_notes.config.exceptions.RateLimitExceededException;
+import com.notex.student_notes.config.ratelimiting.RateLimitExceededException;
 import com.notex.student_notes.note.controller.NoteController;
 import com.notex.student_notes.note.dto.CreateNoteDto;
 import com.notex.student_notes.note.dto.NoteDto;
 import com.notex.student_notes.note.dto.NoteImageDto;
 import com.notex.student_notes.note.dto.UpdateNoteDto;
-import com.notex.student_notes.config.RateLimitingService;
+import com.notex.student_notes.config.ratelimiting.RateLimitingService;
 import com.notex.student_notes.note.exceptions.UserNotNoteOwner;
 import com.notex.student_notes.note.mapper.NoteMapper;
 import com.notex.student_notes.note.model.Note;

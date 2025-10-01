@@ -3,7 +3,7 @@ package com.notex.student_notes.config.security;
 import com.notex.student_notes.ai.summary.exceptions.SummaryGenerationFailedException;
 import com.notex.student_notes.auth.dto.NoChangesProvidedException;
 import com.notex.student_notes.auth.exceptions.*;
-import com.notex.student_notes.config.exceptions.RateLimitExceededException;
+import com.notex.student_notes.config.ratelimiting.RateLimitExceededException;
 import com.notex.student_notes.group.exceptions.*;
 import com.notex.student_notes.note.exceptions.*;
 import com.notex.student_notes.user.exceptions.UserNotFoundException;

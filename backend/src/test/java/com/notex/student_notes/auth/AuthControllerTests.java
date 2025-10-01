@@ -7,8 +7,8 @@ import com.notex.student_notes.auth.dto.LoginUserResponseDto;
 import com.notex.student_notes.auth.dto.RegisterUserDto;
 import com.notex.student_notes.auth.service.AuthService;
 import com.notex.student_notes.auth.service.JwtService;
-import com.notex.student_notes.config.RateLimitingService;
-import com.notex.student_notes.config.exceptions.RateLimitExceededException;
+import com.notex.student_notes.config.ratelimiting.RateLimitingService;
+import com.notex.student_notes.config.ratelimiting.RateLimitExceededException;
 import com.notex.student_notes.user.dto.UserDto;
 import com.notex.student_notes.user.service.CustomUserDetailsService;
 import org.junit.jupiter.api.Test;
@@ -23,7 +23,6 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import static org.mockito.ArgumentMatchers.any;

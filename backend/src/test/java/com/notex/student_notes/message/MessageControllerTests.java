@@ -2,7 +2,7 @@ package com.notex.student_notes.message;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.notex.student_notes.auth.security.JwtAuthFilter;
-import com.notex.student_notes.config.RateLimitingService;
+import com.notex.student_notes.config.ratelimiting.RateLimitingService;
 import com.notex.student_notes.group.model.Group;
 import com.notex.student_notes.message.controller.MessageController;
 import com.notex.student_notes.message.dto.MessageDto;
@@ -100,7 +100,7 @@ public class MessageControllerTests {
         input.setGroupId(1L);
         input.setContent("Test message");
 
-        doThrow(new com.notex.student_notes.config.exceptions.RateLimitExceededException("Rate limit exceeded"))
+        doThrow(new com.notex.student_notes.config.ratelimiting.RateLimitExceededException("Rate limit exceeded"))
                 .when(rateLimitingService).checkRateLimit(anyString(), anyString(), anyInt(), anyInt());
 
         mockMvc.perform(post("/groups/1/messages")

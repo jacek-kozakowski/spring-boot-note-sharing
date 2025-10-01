@@ -1,6 +1,6 @@
 package com.notex.student_notes.group.controller;
 
-import com.notex.student_notes.config.RateLimitingService;
+import com.notex.student_notes.config.ratelimiting.RateLimitingService;
 import com.notex.student_notes.group.dto.*;
 import com.notex.student_notes.group.service.GroupService;
 import com.notex.student_notes.user.dto.UserDto;

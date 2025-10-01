@@ -1,8 +1,8 @@
 package com.notex.student_notes;
 
-import com.notex.student_notes.config.exceptions.RateLimitExceededException;
+import com.notex.student_notes.config.ratelimiting.RateLimitExceededException;
 import jakarta.servlet.http.HttpServletRequest;
-import com.notex.student_notes.config.RateLimitingService;
+import com.notex.student_notes.config.ratelimiting.RateLimitingService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;

@@ -1,7 +1,8 @@
 package com.notex.student_notes.ai.summary.controller;
 
 import com.notex.student_notes.ai.summary.service.SummaryService;
-import com.notex.student_notes.config.RateLimitingService;
+import com.notex.student_notes.config.ai.AiCallsLimitingService;
+import com.notex.student_notes.config.ratelimiting.RateLimitingService;
 import com.notex.student_notes.group.dto.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,6 @@ public class SummaryController {
     public ResponseEntity<ApiResponse> summarizeNote(@PathVariable Long noteId, HttpServletRequest request){
         String remoteAddress = request.getRemoteAddr();
         rateLimitingService.checkRateLimit(remoteAddress,"/notes/{noteId}/summarize", 5, 1);
-        return ResponseEntity.ok(new ApiResponse(summaryService.summarizeNote(noteId)));
+        return ResponseEntity.ok(new ApiResponse(summaryService.summarizeNote(noteId, remoteAddress)));
     }
 }

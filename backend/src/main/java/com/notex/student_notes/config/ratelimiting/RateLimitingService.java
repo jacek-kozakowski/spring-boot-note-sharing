@@ -1,6 +1,5 @@
-package com.notex.student_notes.config;
+package com.notex.student_notes.config.ratelimiting;
 
-import com.notex.student_notes.config.exceptions.RateLimitExceededException;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;

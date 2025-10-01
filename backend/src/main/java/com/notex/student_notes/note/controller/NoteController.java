@@ -1,6 +1,6 @@
 package com.notex.student_notes.note.controller;
 
-import com.notex.student_notes.config.RateLimitingService;
+import com.notex.student_notes.config.ratelimiting.RateLimitingService;
 import com.notex.student_notes.note.dto.CreateNoteDto;
 import com.notex.student_notes.note.dto.NoteDto;
 import com.notex.student_notes.note.dto.UpdateNoteDto;

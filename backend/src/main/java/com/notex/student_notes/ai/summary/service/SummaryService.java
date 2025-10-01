@@ -3,6 +3,7 @@ package com.notex.student_notes.ai.summary.service;
 import com.notex.student_notes.ai.summary.exceptions.SummaryGenerationFailedException;
 import com.notex.student_notes.ai.summary.model.Summary;
 import com.notex.student_notes.ai.summary.repository.SummaryRepository;
+import com.notex.student_notes.config.ai.AiCallsLimitingService;
 import com.notex.student_notes.note.exceptions.EmptyNoteException;
 import com.notex.student_notes.note.exceptions.NoteDeletedException;
 import com.notex.student_notes.note.exceptions.NoteNotFoundException;
@@ -12,6 +13,7 @@ import com.notex.student_notes.note.repository.NoteRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +31,7 @@ public class SummaryService {
     private final ChatClient chatClient;
     private final NoteRepository noteRepository;
     private final SummaryRepository summaryRepository;
+    private final AiCallsLimitingService aiCallsLimitingService;
 
     private static final String SUMMARY_PROMPT = """
         You are a professional university teacher.
@@ -54,29 +57,39 @@ public class SummaryService {
 
     @Cacheable(value = "summaries", key = "#id")
     @Transactional
-    public String summarizeNote(Long id){
+    public String summarizeNote(Long id, String address){
         log.info("Summarizing note {}", id);
         Optional<Summary> summary = summaryRepository.findByNoteId(id);
         if(summary.isPresent()){
             Summary existingSummary = summary.get();
             if(existingSummary.getExpiresAt().isBefore(LocalDateTime.now())){
                 log.info("Note {} was not summarized in the last 24 hours. Re-summarizing.", id);
-                summaryRepository.delete(existingSummary);
+                summaryRepository.deleteByNoteId(id);
+                summaryRepository.flush();
+                log.info("Note {} deleted from cache", id);
             }else{
                 log.debug("Success - Note {} already summarized", id);
                 return existingSummary.getText();
             }
         }
-
         Note note = getNoteIfValid(id);
+
+        aiCallsLimitingService.checkAiCalls(address);
+
         String newSummaryText = generateSummary(note);
+        log.info("Note {} summarized successfully.", id);
+        return newSummaryText;
+    }
+
+    private String generateSummary(Note note){
+        String newSummaryText = callForSummary(note);
         Summary newSummary = new Summary();
         newSummary.setNote(note);
         newSummary.setText(newSummaryText);
         summaryRepository.save(newSummary);
-        log.info("Note {} summarized successfully.", id);
         return newSummaryText;
     }
+
 
     private Note getNoteIfValid(Long id){
         Note note = noteRepository.findById(id).orElseThrow(()->{
@@ -94,7 +107,7 @@ public class SummaryService {
         return note;
     }
 
-    private String generateSummary(Note note){
+    private String callForSummary(Note note){
         String newSummaryText;
         List<NoteImage> noteImages = note.getImages();
         try {
