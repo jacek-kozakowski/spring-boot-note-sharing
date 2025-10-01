@@ -14,7 +14,7 @@ import com.notex.student_notes.note.mapper.NoteMapper;
 import com.notex.student_notes.note.model.Note;
 import com.notex.student_notes.note.model.NoteImage;
 import com.notex.student_notes.note.repository.NoteRepository;
-import com.notex.student_notes.upload.service.UploadService;
+import com.notex.student_notes.note.repository.NoteImageRepository;
 import com.notex.student_notes.user.exceptions.UserNotFoundException;
 import com.notex.student_notes.user.model.User;
 import com.notex.student_notes.user.repository.UserRepository;
@@ -26,10 +26,15 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 import io.micrometer.core.instrument.Timer;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 @Service
 @Slf4j
@@ -37,10 +42,10 @@ import java.util.*;
 public class NoteService {
 
     private final NoteRepository noteRepository;
+    private final NoteImageRepository noteImageRepository;
     private final UserRepository userRepository;
     private final NoteMapper noteMapper;
     private final MinioService minioService;
-    private final UploadService uploadService;
     private final CustomMetrics customMetrics;
 
     private static final Filter FILTER_FOR_USER = Filter.ACTIVE;
@@ -99,14 +104,34 @@ public class NoteService {
         Note noteToCreate = new Note(inputNote, owner);
         Note createdNote = noteRepository.save(noteToCreate);
 
-        if (inputNote.getImages() != null && !inputNote.getImages().isEmpty()){
-            log.info("Queuing {} images for async upload to note {}", inputNote.getImages().size(), createdNote.getId());
+        log.info("Checking images in inputNote: {}", inputNote.hasImages() ? inputNote.getImages().size() : "null");
+        if (inputNote.hasImages()){
+            log.info("Uploading {} images synchronously to note {}", inputNote.getImages().size(), createdNote.getId());
             try {
-                uploadService.queueUpload(createdNote.getId(), inputNote.getImages(), owner);
-                log.debug("Queued {} images for upload", inputNote.getImages().size());
-            } catch (Exception e) {
-                log.error("Failed to queue images for upload: {}", e.getMessage());
+                for (MultipartFile file : inputNote.getImages()) {
+                    if (!file.isEmpty()) {
+                        String uploadedFilename = minioService.uploadFile(
+                            file.getOriginalFilename(),
+                            file.getInputStream(),
+                            file.getSize(),
+                            file.getContentType()
+                        );
+                        
+                        NoteImage noteImage = new NoteImage();
+                        noteImage.setNote(createdNote);
+                        noteImage.setFilename(uploadedFilename);
+                        
+                        createdNote.addImage(noteImage);
+                        log.debug("Successfully uploaded file: {}", file.getOriginalFilename());
+                    }
+                }
+                log.info("Successfully uploaded {} images for note {}", inputNote.getImages().size(), createdNote.getId());
+            } catch (IOException e) {
+                log.error("Failed to upload images for note {}: {}", createdNote.getId(), e.getMessage());
+                throw new RuntimeException("Failed to upload images", e);
             }
+        } else {
+            log.info("No images to upload for note {}", createdNote.getId());
         }
 
         log.debug("Success - User {} created note {} with {} images queued for upload",
@@ -141,9 +166,9 @@ public class NoteService {
             noteToUpdate.setContent(inputNote.getContent());
         }
         if (inputNote.hasRemoveImages()){
-            for (Integer imageIndex : inputNote.getRemoveImageIndexes()){
+            for (Long imageId : inputNote.getRemoveImageIds()){
                 NoteImage noteImage = noteToUpdate.getImages().stream()
-                        .filter(i -> i.getIndex() == imageIndex)
+                        .filter(i -> Objects.equals(i.getId(), imageId))
                         .findFirst().orElse(null);
                 if (noteImage != null){
                     try {
@@ -152,23 +177,37 @@ public class NoteService {
                         log.error("Error - Failed to delete note image from MinIO", e);
                         throw new NoteImageDeleteException("Failed to delete note image from MinIO");
                     }
-                    log.debug("Success - Note images {} removed.", inputNote.getRemoveImageIndexes());
+                    log.debug("Success - Note image {} removed.", imageId);
                 }
             }
         }
         if (inputNote.hasImages()){
-            log.info("Queuing {} new images for async upload to note {}", inputNote.getNewImages().size(), id);
-            User noteOwner = noteToUpdate.getOwner();
-
+            log.info("Uploading {} new images synchronously to note {}", inputNote.getNewImages().size(), id);
             try {
-                uploadService.queueUpload(id, inputNote.getNewImages(), noteOwner);
-                log.debug("Success - Queued {} new images for async upload.", inputNote.getNewImages().size());
-            } catch (Exception e) {
-                log.error("Failed to queue images for upload: {}", e.getMessage());
+                for (MultipartFile file : inputNote.getNewImages()) {
+                    if (!file.isEmpty()) {
+                        String uploadedFilename = minioService.uploadFile(
+                            file.getOriginalFilename(),
+                            file.getInputStream(),
+                            file.getSize(),
+                            file.getContentType()
+                        );
+                        
+                        NoteImage noteImage = new NoteImage();
+                        noteImage.setNote(noteToUpdate);
+                        noteImage.setFilename(uploadedFilename);
+                        
+                        noteToUpdate.addImage(noteImage);
+                        log.debug("Successfully uploaded file: {}", file.getOriginalFilename());
+                    }
+                }
+                log.info("Successfully uploaded {} new images for note {}", inputNote.getNewImages().size(), id);
+            } catch (IOException e) {
+                log.error("Failed to upload new images for note {}: {}", id, e.getMessage());
+                throw new RuntimeException("Failed to upload new images", e);
             }
         }
         noteToUpdate.setUpdatedAt(LocalDateTime.now());
-        normalizeImageIndexes(noteToUpdate);
         Note updatedNote = noteRepository.save(noteToUpdate);
         NoteDto updatedNoteDto = noteMapper.toDto(updatedNote);
         log.debug("Success - note {} updated.", id);
@@ -219,7 +258,6 @@ public class NoteService {
                 log.error("Error - Failed to delete note image from MinIO", e);
                 throw new NoteImageDeleteException("Failed to delete note image from MinIO");
             }
-            normalizeImageIndexes(note);
             noteRepository.save(note);
             log.debug("Success - Note image {} deleted from note {}", imageId, noteId);
         }
@@ -258,14 +296,5 @@ public class NoteService {
     }
 
 
-    private void normalizeImageIndexes(Note note){
-        List<NoteImage> images = note.getImages()
-                .stream()
-                .sorted(Comparator.comparingInt(NoteImage::getIndex))
-                .toList();
 
-        for (int i = 0; i < images.size(); i++) {
-            images.get(i).setIndex(i);
-        }
-    }
 }

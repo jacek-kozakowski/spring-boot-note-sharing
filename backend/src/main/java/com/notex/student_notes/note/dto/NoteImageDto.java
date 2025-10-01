@@ -11,6 +11,5 @@ import lombok.Setter;
 @AllArgsConstructor
 public class NoteImageDto {
     private Long id;
-    private int index;
     private String url;
 }

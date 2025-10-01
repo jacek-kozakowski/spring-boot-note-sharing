@@ -89,21 +89,29 @@ const GroupCard: React.FC<GroupCardProps> = ({
       }}
     >
       <CardContent sx={{ flexGrow: 1 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>
-            {group.name?.charAt(0).toUpperCase() || 'G'}
-          </Avatar>
-          <Box sx={{ flexGrow: 1 }}>
-            <Typography variant="h6" component="h2" noWrap>
-              {group.name || 'No name'}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Owner: {group.ownerUsername || 'Unknown'}
-            </Typography>
+        <Box sx={{ mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+            <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>
+              {group.name?.charAt(0).toUpperCase() || 'G'}
+            </Avatar>
+            <Box sx={{ flexGrow: 1 }}>
+              <Typography variant="h6" component="h2" noWrap>
+                {group.name || 'No name'}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Owner: {group.ownerUsername || 'Unknown'}
+              </Typography>
+            </Box>
           </Box>
-          {isOwner && (
-            <Chip label="Owner" color="primary" size="small" />
-          )}
+          
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
+              ID: {group.id}
+            </Typography>
+            {isOwner && (
+              <Chip label="Owner" color="primary" size="small" />
+            )}
+          </Box>
         </Box>
 
         <Typography

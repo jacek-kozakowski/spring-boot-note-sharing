@@ -25,7 +25,6 @@ public class NoteMapper {
                 img ->{
                     NoteImageDto noteImage = new NoteImageDto();
                     noteImage.setId(img.getId());
-                    noteImage.setIndex(img.getIndex());
                     noteImage.setUrl(minioService.getFileUrl(img.getFilename()));
                     return noteImage;
                 })

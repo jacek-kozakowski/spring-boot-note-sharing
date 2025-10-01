@@ -43,7 +43,7 @@ const EditNote: React.FC = () => {
     title: '',
     content: '',
     newImages: [],
-    removeImageIndexes: [],
+    removeImageIds: [],
   });
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [imagesToRemove, setImagesToRemove] = useState<Set<number>>(new Set());
@@ -74,7 +74,7 @@ const EditNote: React.FC = () => {
         title: noteData.title,
         content: noteData.content,
         newImages: [],
-        removeImageIndexes: [],
+        removeImageIds: [],
       });
     } catch (err: any) {
       setError('Failed to load note');
@@ -130,18 +130,18 @@ const EditNote: React.FC = () => {
     setImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
-  const toggleImageRemoval = (imageIndex: number) => {
+  const toggleImageRemoval = (imageId: number) => {
     const newImagesToRemove = new Set(imagesToRemove);
-    if (newImagesToRemove.has(imageIndex)) {
-      newImagesToRemove.delete(imageIndex);
+    if (newImagesToRemove.has(imageId)) {
+      newImagesToRemove.delete(imageId);
     } else {
-      newImagesToRemove.add(imageIndex);
+      newImagesToRemove.add(imageId);
     }
     setImagesToRemove(newImagesToRemove);
     
     setFormData(prev => ({
       ...prev,
-      removeImageIndexes: Array.from(newImagesToRemove),
+      removeImageIds: Array.from(newImagesToRemove),
     }));
   };
 
@@ -169,9 +169,9 @@ const EditNote: React.FC = () => {
         });
       }
 
-      if (formData.removeImageIndexes && formData.removeImageIndexes.length > 0) {
-        formData.removeImageIndexes.forEach((index) => {
-          formDataToSend.append('removeImageIndexes', index.toString());
+      if (formData.removeImageIds && formData.removeImageIds.length > 0) {
+        formData.removeImageIds.forEach((id) => {
+          formDataToSend.append('removeImageIds', id.toString());
         });
       }
 
@@ -285,8 +285,8 @@ const EditNote: React.FC = () => {
                           <FormControlLabel
                             control={
                               <Checkbox
-                                checked={imagesToRemove.has(index)}
-                                onChange={() => toggleImageRemoval(index)}
+                                checked={imagesToRemove.has(image.id)}
+                                onChange={() => toggleImageRemoval(image.id)}
                                 color="error"
                               />
                             }

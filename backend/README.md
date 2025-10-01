@@ -12,8 +12,7 @@ This backend represents my **main focus and development effort** in the Notex pr
 - **AI-Powered Features** - Note summarization and multi-language translation
 - **Rate Limiting** - Rate limiting for endpoints
 - **Caching** - Caching for frequently used data
-- **File Upload System** - Multi-format file support (images, PDFs, documents)
-- **Async File Processing** - Background file upload with retry mechanism
+- **File Upload System** - Synchronous Multi-format file support (images, PDFs, documents)
 - **MinIO Integration** - S3-compatible object storage for files
 - **Group Messaging** - Real-time group communication system
 - **Health Monitoring** - Custom health indicators and metrics
@@ -131,6 +130,13 @@ MacOS:
 Windows:
 ```bash
 mvnw.cmd test
+```
+
+
+## Health Check
+To check if the backend is running, use:
+```bash
+curl -s http://localhost:8080/actuator/health
 ```
   
 # API Usage Examples

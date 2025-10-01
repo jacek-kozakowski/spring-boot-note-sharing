@@ -35,7 +35,7 @@ const Register: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const steps = ['Dane Konta', 'Weryfikacja Email'];
+  const steps = ['Account Data', 'Email Verification'];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -45,19 +45,19 @@ const Register: React.FC = () => {
 
   const validateForm = () => {
     if (!formData.username || !formData.email || !formData.password || !formData.confirmPassword || !formData.firstName || !formData.lastName) {
-      setError('Proszę wypełnić wszystkie pola');
+      setError('Please fill in all fields');
       return false;
     }
     if (!formData.email.includes('@')) {
-      setError('Proszę podać prawidłowy adres email');
+      setError('Please enter a valid email address');
       return false;
     }
     if (formData.password.length < 8) {
-      setError('Hasło musi mieć co najmniej 8 znaków');
+      setError('Password must be at least 8 characters long');
       return false;
     }
     if (formData.password !== formData.confirmPassword) {
-      setError('Hasła nie są identyczne');
+      setError('Passwords do not match');
       return false;
     }
 
@@ -99,7 +99,7 @@ const Register: React.FC = () => {
   const handleVerification = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!verificationCode) {
-      setError('Proszę podać kod weryfikacyjny');
+      setError('Please enter verification code');
       return;
     }
     setLoading(true);
@@ -197,7 +197,7 @@ const Register: React.FC = () => {
               required
               fullWidth
               id="password"
-              label="Hasło"
+              label="Password"
               name="password"
               type={showPassword ? 'text' : 'password'}
               autoComplete="new-password"
@@ -229,7 +229,7 @@ const Register: React.FC = () => {
               required
               fullWidth
               name="confirmPassword"
-              label="Potwierdź hasło"
+              label="Confirm Password"
               type={showConfirmPassword ? 'text' : 'password'}
               id="confirmPassword"
               autoComplete="new-password"
@@ -260,7 +260,7 @@ const Register: React.FC = () => {
               required
               fullWidth
               id="firstName"
-              label="Imię"
+              label="First Name"
               name="firstName"
               type="text"
               autoComplete="firstName"
@@ -275,7 +275,7 @@ const Register: React.FC = () => {
               required
               fullWidth
               id="lastName"
-              label="Nazwisko"
+              label="Last Name"
               name="lastName"
               type="text"
               autoComplete="lastName"
@@ -295,9 +295,9 @@ const Register: React.FC = () => {
               {loading ? (
                 <>
                   <CircularProgress size={20} sx={{ mr: 1 }} />
-                  Rejestrowanie...
+                  Registering...
                 </>
-              ) : 'Zarejestruj się'}
+              ) : 'Sign Up'}
             </Button>
           </Box>
         );
@@ -305,7 +305,7 @@ const Register: React.FC = () => {
         return (
           <Box component="form" onSubmit={handleVerification} sx={{ width: '100%' }}>
             <Typography variant="body1" sx={{ mb: 3, textAlign: 'center' }}>
-              Kod weryfikacyjny został wysłany na <strong>{formData.email}</strong>. Wprowadź go poniżej, aby zweryfikować konto.
+              Verification code has been sent to <strong>{formData.email}</strong>. Enter it below to verify your account.
             </Typography>
 
             <TextField
@@ -313,7 +313,7 @@ const Register: React.FC = () => {
               required
               fullWidth
               id="verificationCode"
-              label="Kod weryfikacyjny"
+              label="Verification Code"
               name="verificationCode"
               type="text"
               autoComplete="off"
@@ -334,9 +334,9 @@ const Register: React.FC = () => {
               {loading ? (
                 <>
                   <CircularProgress size={20} sx={{ mr: 1 }} />
-                  Weryfikowanie...
+                  Verifying...
                 </>
-              ) : 'Zweryfikuj konto'}
+              ) : 'Verify Account'}
 
             </Button>
 
@@ -347,7 +347,7 @@ const Register: React.FC = () => {
               disabled={loading}
               sx={{ mb: 2 }}
             >
-              Wyślij ponownie kod weryfikacyjny
+              Resend Verification Code
             </Button>
           </Box>
         );
@@ -406,14 +406,14 @@ const Register: React.FC = () => {
         {renderStepContent(activeStep)}
         <Box sx={{ textAlign: 'center', mt: 2 }}>
             <Typography variant="body2">
-              Masz już konto?{' '}
+              Already have an account?{' '}
               <Button
                 variant="text"
                 onClick={() => navigate('/login')}
                 disabled={loading}
                 sx={{ textTransform: 'none' }}
               >
-                Zaloguj się
+                Sign In
               </Button>
             </Typography>
 

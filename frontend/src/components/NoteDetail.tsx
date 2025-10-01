@@ -460,7 +460,7 @@ const NoteDetail: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
             <ImageIcon sx={{ mr: 1, color: 'primary.main' }} />
             <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              Obrazy ({note.images.length})
+              Images ({note.images.length})
             </Typography>
           </Box>
           

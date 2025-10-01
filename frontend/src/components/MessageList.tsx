@@ -76,7 +76,7 @@ const MessageList: React.FC<MessageListProps> = ({
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <List sx={{ flexGrow: 1, overflow: 'auto', p: 1 }}>
+      <List sx={{ flexGrow: 1, overflow: 'auto', p: 2 }}>
         {loading && messages.length === 0 && (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
             <CircularProgress />
@@ -103,7 +103,7 @@ const MessageList: React.FC<MessageListProps> = ({
                 sx={{
                   justifyContent: isOwn ? 'flex-end' : 'flex-start',
                   alignItems: 'flex-start',
-                  px: 1,
+                  px: 2,
                 }}
               >
                 <Box
@@ -111,7 +111,7 @@ const MessageList: React.FC<MessageListProps> = ({
                     display: 'flex',
                     flexDirection: isOwn ? 'row-reverse' : 'row',
                     alignItems: 'flex-start',
-                    maxWidth: '70%',
+                    maxWidth: '85%',
                     gap: 1,
                   }}
                 >
@@ -131,7 +131,7 @@ const MessageList: React.FC<MessageListProps> = ({
                   <Paper
                     elevation={1}
                     sx={{
-                      p: 1.5,
+                      p: 2,
                       bgcolor: isOwn ? 'primary.main' : 'grey.100',
                       color: isOwn ? 'white' : 'text.primary',
                       borderRadius: 2,

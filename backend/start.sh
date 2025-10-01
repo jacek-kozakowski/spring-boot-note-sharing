@@ -12,9 +12,23 @@ echo "MinIO is ready, setting up bucket policy..."
 # Wait a bit more for MinIO to fully initialize
 sleep 5
 
+# Install MinIO client if not present
+if ! command -v mc &> /dev/null; then
+  echo "Installing MinIO client..."
+  wget -O mc https://dl.min.io/client/mc/release/linux-amd64/mc
+  chmod +x mc
+  mv mc /usr/local/bin/
+fi
+
 # Configure MinIO alias and set bucket policy to public
-docker exec minio mc alias set local http://localhost:9000 admin admin12345
-docker exec minio mc anonymous set public local/notex-notes
+echo "Setting up MinIO alias..."
+mc alias set local http://minio:9000 admin admin12345
+
+echo "Creating bucket if it doesn't exist..."
+mc mb local/notex-notes --ignore-existing
+
+echo "Setting bucket policy to public read..."
+mc anonymous set public local/notex-notes
 
 echo "Bucket policy set successfully"
 

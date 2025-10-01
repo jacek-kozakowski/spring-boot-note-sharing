@@ -33,7 +33,7 @@ const Login: React.FC = () => {
     e.preventDefault();
 
     if (!formData.username || !formData.password) {
-      setError('Proszę wypełnić wszystkie pola');
+      setError('Please fill in all fields');
       return;
     }
     
@@ -100,7 +100,7 @@ const Login: React.FC = () => {
           <Typography variant="h4" color="primary" fontWeight="bold">Notex</Typography>
         </Box>
         <Typography variant="h5" align="center" component="h2" sx={{ mb: 3 }}>
-          Zaloguj się do swojego konta
+          Sign in to your account
         </Typography>
 
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
@@ -133,7 +133,7 @@ const Login: React.FC = () => {
             required
             fullWidth
             name="password"
-            label="Hasło"
+            label="Password"
             type={showPassword ? 'text' : 'password'}
             id="password"
             autoComplete="current-password"
@@ -169,21 +169,21 @@ const Login: React.FC = () => {
             {loading ? (
               <>
                 <CircularProgress size={20} sx={{ mr: 1 }} />
-                Logowanie...
+                Signing in...
               </>
-            ) : 'Zaloguj się'}
+            ) : 'Sign In'}
           </Button>
 
           <Box sx={{ textAlign: 'center', mt: 2 }}>
             <Typography variant="body2">
-              Nie masz konta?{' '}
+              Don't have an account?{' '}
               <Button
                 variant="text"
                 onClick={() => navigate('/register')}
                 disabled={loading}
                 sx={{ textTransform: 'none' }}
               >
-                Zarejestruj się
+                Sign Up
               </Button>
             </Typography>
           </Box>

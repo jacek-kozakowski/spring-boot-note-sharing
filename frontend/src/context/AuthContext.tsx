@@ -18,6 +18,7 @@ interface AuthContextType {
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -51,6 +52,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser(null);
   };
 
+  const refreshUser = async () => {
+    try {
+      const response = await notexAPI.users.getMe();
+      setUser(response.data);
+    } catch (error) {
+      console.error('Failed to refresh user data:', error);
+      apiHelpers.removeToken();
+      setUser(null);
+    }
+  };
+
   const isAuthenticated = !!user;
 
   // Check if user is logged in on app start
@@ -58,9 +70,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const checkAuth = async () => {
       if (apiHelpers.isLoggedIn()) {
         try {
-          console.log('Checking authentication...');
           const response = await notexAPI.users.getMe();
-          console.log('User data received:', response.data);
           setUser(response.data);
         } catch (error) {
           console.error('Failed to fetch user data:', error);
@@ -83,6 +93,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     logout,
     isAuthenticated,
+    refreshUser,
   };
 
   return (

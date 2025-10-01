@@ -26,4 +26,8 @@ public class CreateNoteDto {
     private String content;
 
     private List<MultipartFile> images;
+
+    public boolean hasImages(){
+        return images != null && !images.isEmpty();
+    }
 }

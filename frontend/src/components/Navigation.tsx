@@ -23,9 +23,12 @@ import {
   Person as PersonIcon,
   Title as TitleIcon,
   Group as GroupIcon,
+  Settings as SettingsIcon,
+  AdminPanelSettings as AdminIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import ProfileUpdate from './ProfileUpdate';
 
 const Navigation: React.FC = () => {
   const navigate = useNavigate();
@@ -34,6 +37,7 @@ const Navigation: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchType, setSearchType] = useState<'title' | 'user' | 'group' | 'groupUser'>('title');
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -46,6 +50,11 @@ const Navigation: React.FC = () => {
   const handleLogout = () => {
     logout();
     navigate('/login');
+    handleClose();
+  };
+
+  const handleProfileUpdate = () => {
+    setProfileDialogOpen(true);
     handleClose();
   };
 
@@ -137,6 +146,20 @@ const Navigation: React.FC = () => {
           >
             Groups
           </Button>
+
+          {user?.role === 'ROLE_ADMIN' && (
+            <Button
+              color="inherit"
+              startIcon={<AdminIcon />}
+              onClick={() => navigate('/admin')}
+              sx={{
+                color: isActive('/admin') ? 'primary.main' : 'text.primary',
+                fontWeight: isActive('/admin') ? 600 : 400,
+              }}
+            >
+              Admin
+            </Button>
+          )}
         </Box>
 
         <Box
@@ -248,6 +271,16 @@ const Navigation: React.FC = () => {
               <GroupsIcon sx={{ mr: 1 }} />
               Groups
             </MenuItem>
+            {user?.role === 'ROLE_ADMIN' && (
+              <MenuItem onClick={() => { navigate('/admin'); handleClose(); }}>
+                <AdminIcon sx={{ mr: 1 }} />
+                Admin Panel
+              </MenuItem>
+            )}
+            <MenuItem onClick={handleProfileUpdate}>
+              <SettingsIcon sx={{ mr: 1 }} />
+              Update Profile
+            </MenuItem>
             <MenuItem onClick={handleLogout}>
               <Logout sx={{ mr: 1 }} />
               Logout
@@ -255,6 +288,11 @@ const Navigation: React.FC = () => {
           </Menu>
         </Box>
       </Toolbar>
+      
+      <ProfileUpdate 
+        open={profileDialogOpen} 
+        onClose={() => setProfileDialogOpen(false)} 
+      />
     </AppBar>
   );
 };

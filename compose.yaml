@@ -9,7 +9,9 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - ./postgres-data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - notex-network
 
   minio:
     image: quay.io/minio/minio:latest
@@ -22,4 +24,55 @@ services:
       - MINIO_ROOT_USER=admin
       - MINIO_ROOT_PASSWORD=admin12345
     volumes:
-      - ./minio-data:/data
+      - minio_data:/data
+    networks:
+      - notex-network
+
+  backend:
+    container_name: backend-notex
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      DATABASE_URL: jdbc:postgresql://postgres:5432/notex
+      DATABASE_USERNAME: notex_user
+      DATABASE_PASSWORD: secret
+      MINIO_URL: http://minio:9000
+      MINIO_PUBLIC_URL: http://localhost:9000
+      MINIO_ACCESS_KEY: admin
+      MINIO_SECRET_KEY: admin12345
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - minio
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - notex-network
+
+  frontend:
+    container_name: frontend-notex
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    networks:
+      - notex-network
+
+volumes:
+  postgres_data:
+  minio_data:
+
+networks:
+  notex-network:
+    driver: bridge

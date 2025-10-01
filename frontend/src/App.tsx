@@ -12,6 +12,7 @@ import CreateNote from './components/CreateNote';
 import EditNote from './components/EditNote';
 import GroupsPage from './components/GroupsPage';
 import GroupMessagesPage from './components/GroupMessagesPage';
+import AdminPanel from './components/AdminPanel';
 import ErrorBoundary from './components/ErrorBoundary';
 
 // Create theme
@@ -77,7 +78,7 @@ const ProtectedRoute = ({ children, adminOnly = false }: { children: React.React
     return <Navigate to="/login" replace />;
   }
   
-  if (adminOnly && user?.role !== 'ADMIN') {
+  if (adminOnly && user?.role !== 'ROLE_ADMIN') {
     return <Navigate to="/dashboard" replace />;
   }
   
@@ -184,6 +185,14 @@ const AppContent = () => {
             element={
               <ProtectedRoute>
                 <GroupMessagesPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin" 
+            element={
+              <ProtectedRoute adminOnly>
+                <AdminPanel />
               </ProtectedRoute>
             } 
           />

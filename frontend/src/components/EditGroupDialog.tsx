@@ -82,8 +82,14 @@ const EditGroupDialog: React.FC<EditGroupDialogProps> = ({
       return;
     }
 
-    if (formData.isPrivate && (!formData.password || formData.password.length < 8)) {
-      setError('Password must be at least 8 characters for private groups');
+    // Only validate password if group is being changed to private or password is being changed
+    if (formData.isPrivate && !group.isPrivate && (!formData.password || formData.password.length < 8)) {
+      setError('Password must be at least 8 characters when making group private');
+      return;
+    }
+    
+    if (formData.password && formData.password.length < 8) {
+      setError('Password must be at least 8 characters');
       return;
     }
 
@@ -91,14 +97,29 @@ const EditGroupDialog: React.FC<EditGroupDialogProps> = ({
       setLoading(true);
       setError(null);
       
-      const updateData: UpdateGroupDto = {
-        name: formData.name,
-        description: formData.description,
-        isPrivate: formData.isPrivate,
-      };
+      const updateData: UpdateGroupDto = {};
 
-      if (formData.password) {
+      // Only include changed fields
+      if (formData.name !== group.name) {
+        updateData.name = formData.name;
+      }
+      
+      if (formData.description !== group.description) {
+        updateData.description = formData.description;
+      }
+      
+      if (formData.isPrivate !== group.isPrivate) {
+        updateData.isPrivate = formData.isPrivate;
+      }
+
+      if (formData.password && formData.password.trim()) {
         updateData.password = formData.password;
+      }
+
+      // Check if there are any changes
+      if (Object.keys(updateData).length === 0) {
+        setError('No changes detected');
+        return;
       }
 
       await notexAPI.groups.updateGroup(group.id, updateData);
@@ -176,15 +197,16 @@ const EditGroupDialog: React.FC<EditGroupDialogProps> = ({
             {formData.isPrivate && (
               <TextField
                 margin="dense"
-                label="New Group Password (leave empty to keep current)"
+                label={group.isPrivate ? "New Group Password (leave empty to keep current)" : "Group Password"}
                 type="password"
                 fullWidth
                 variant="outlined"
                 value={formData.password}
                 onChange={handleChange('password')}
                 disabled={loading}
-                helperText="Enter new password or leave empty to keep current password"
-                placeholder="Enter new group password..."
+                helperText={group.isPrivate ? "Enter new password or leave empty to keep current password" : "Enter password for private group"}
+                placeholder={group.isPrivate ? "Enter new group password..." : "Enter group password..."}
+                required={!group.isPrivate}
               />
             )}
           </Box>

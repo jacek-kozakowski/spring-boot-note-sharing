@@ -21,7 +21,7 @@ public class UpdateNoteDto {
 
     List<MultipartFile> newImages;
 
-    List<Integer> removeImageIndexes;
+    List<Long> removeImageIds;
 
     public boolean hasTitle(){
         return title != null && !title.isBlank();
@@ -33,7 +33,7 @@ public class UpdateNoteDto {
         return newImages != null && !newImages.isEmpty();
     }
     public boolean hasRemoveImages(){
-        return removeImageIndexes != null && !removeImageIndexes.isEmpty();
+        return removeImageIds != null && !removeImageIds.isEmpty();
     }
     public boolean hasAny(){
         return hasTitle() || hasContent() || hasImages() || hasRemoveImages();

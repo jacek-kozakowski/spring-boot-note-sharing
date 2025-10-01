@@ -209,7 +209,7 @@ const GroupMessagesPage: React.FC = () => {
         />
       </Box>
 
-      <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
+      <Box sx={{ p: 3, borderTop: 1, borderColor: 'divider' }}>
         <MessageInput
           onSendMessage={handleSendMessage}
           disabled={sending}

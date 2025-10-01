@@ -111,7 +111,7 @@ public class NoteControllerTests {
         response.setContent("Test note content");
         response.setOwnerUsername("testuser");
         response.setImages(List.of(
-                new NoteImageDto(1L,0, "http://localhost:9000/bucket/1_0.image1.jpg")
+                new NoteImageDto(1L, "http://localhost:9000/bucket/1_0.image1.jpg")
         ));
         response.setCreatedAt(LocalDateTime.now());
 
@@ -180,7 +180,7 @@ public class NoteControllerTests {
         response.setContent("New note content");
         response.setOwnerUsername("testuser");
         response.setImages(List.of(
-                new NoteImageDto(1L, 0, "http://localhost:9000/bucket/1_0.image1.jpg")
+                new NoteImageDto(1L, "http://localhost:9000/bucket/1_0.image1.jpg")
         ));
         response.setUpdatedAt(now);
 

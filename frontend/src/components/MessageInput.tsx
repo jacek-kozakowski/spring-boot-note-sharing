@@ -17,7 +17,7 @@ interface MessageInputProps {
 const MessageInput: React.FC<MessageInputProps> = ({
   onSendMessage,
   disabled = false,
-  placeholder = 'Napisz wiadomość...',
+  placeholder = 'Write a message...',
 }) => {
   const [message, setMessage] = useState('');
   const textFieldRef = useRef<HTMLInputElement>(null);
@@ -53,7 +53,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
       component="form"
       onSubmit={handleSubmit}
       sx={{
-        p: 1,
+        p: 2,
         display: 'flex',
         alignItems: 'flex-end',
         gap: 1,

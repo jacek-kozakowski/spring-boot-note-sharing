@@ -21,8 +21,10 @@ export interface resendVerificationDto {
 }
 
 export interface updateUserDto {
+    username?: string;
+    password?: string;
+    email?: string;
     firstName?: string;
     lastName?: string;
-    email?: string;
 }
 

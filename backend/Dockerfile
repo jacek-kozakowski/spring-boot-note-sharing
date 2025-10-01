@@ -1,7 +1,7 @@
 FROM openjdk:21-jdk-slim
 
-# Install docker client and netcat
-RUN apt-get update && apt-get install -y docker.io netcat-openbsd && rm -rf /var/lib/apt/lists/*
+# Install docker client, netcat, and wget
+RUN apt-get update && apt-get install -y docker.io netcat-openbsd wget && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 

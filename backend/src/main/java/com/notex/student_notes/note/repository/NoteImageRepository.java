@@ -13,8 +13,4 @@ import java.util.List;
 public interface NoteImageRepository extends JpaRepository<NoteImage, Long> {
     void deleteByNote(Note note);
     List<NoteImage> findAllByNote(Note note);
-    List<NoteImage> findByNote_IdOrderByIndexDesc(Long noteId);
-    
-    @Query("SELECT MAX(ni.index) FROM NoteImage ni WHERE ni.note.id = :noteId")
-    Integer findMaxIndexByNoteId(@Param("noteId") Long noteId);
 }

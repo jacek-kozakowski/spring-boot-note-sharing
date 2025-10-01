@@ -18,10 +18,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Entity
-@Table(
-    name = "note_images",
-    uniqueConstraints = @UniqueConstraint(columnNames = {"note_id", "index"})
-)
+@Table(name = "note_images")
 @NoArgsConstructor
 public class NoteImage {
     @Id
@@ -38,8 +35,6 @@ public class NoteImage {
     @Transient
     private String url;
 
-    @Column(nullable = false)
-    private int index;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;

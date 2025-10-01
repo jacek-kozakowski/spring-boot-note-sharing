@@ -1,6 +1,5 @@
 export interface NoteImage {
   id: number;
-  index: number;
   url: string;
 }
 
@@ -24,7 +23,7 @@ export interface UpdateNoteDto {
   title?: string;
   content?: string;
   newImages?: File[];
-  removeImageIndexes?: number[];
+  removeImageIds?: number[];
 }
 
 export interface NoteSearchParams {
