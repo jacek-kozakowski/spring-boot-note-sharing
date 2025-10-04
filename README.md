@@ -89,6 +89,8 @@ MAIL_PASSWORD=your-app-password
 OPENAI_API_KEY=your-openai-api-key
 ```
 
+You can get your app passwords [here](https://myaccount.google.com/apppasswords). You have to have 2FA enabled.
+
 3. Run the full stack
 ```bash
 docker-compose up -d
