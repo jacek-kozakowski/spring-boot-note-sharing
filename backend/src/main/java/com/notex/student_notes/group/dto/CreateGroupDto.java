@@ -20,7 +20,6 @@ public class CreateGroupDto {
     @JsonProperty("isPrivate")
     private boolean isPrivate;
 
-    @Size(min =8)
     private String password;
 
 }

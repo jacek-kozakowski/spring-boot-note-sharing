@@ -1,15 +1,26 @@
 # NotEx - Note exchange platform
 
+## Why NotEx?
+
+I feel like there aren't too many platforms that allow students to exchange notes.
 My idea was to create a web app for students to exchange notes
-by posting them on a platform for everybody else to access. 
+by posting them on a platform for everybody else to access.
 
-The app allows users to **post their notes** and attach images and files and share them with other users. Notes can be summarized and translated using AI. Translations and summaries are cached, which prevents extensive use of tokens. Users can update and delete their notes. Users can also create, delete and update groups. Users can exchange messages with other users in groups. 
+## What is NotEx?
+NotEx app allows users to **post their notes** and attach images and files and share them with other users.
+Notes can be summarized and translated using AI.
+Translations and summaries are cached and rate limited, which prevents extensive use of tokens.
+Users can update and delete their notes and also create, delete and update groups. 
+Users can exchange messages with other users in groups. 
 
-**I focused on the backend side of the project**. The frontend was implemented to showcase my backend project. Frontend was created with the help of AI and doesn't represent my frontend development skills.
+**I focused on the backend side of the project**.
+The frontend was implemented to showcase my backend project, and it was created with the help of AI.
+It doesn't represent my frontend development skills.
 
-If you wish to test the backend part of the project without using the frontend, you can use tools like Postman or curl to interact with the API endpoints. **Backend has its own docker-compose file** and [README](backend/README.md) file with instructions on how to run it.
+If you wish to test the backend part of the project without using the frontend, you can use tools like Postman or curl to interact with the API endpoints.
+**Backend has its own docker-compose file** and [README](backend/README.md) file with instructions on how to run it.
 
-I suggest you use the full stack setup to run the project with Docker. It makes it easier to test the backend.
+I suggest you use the full stack setup to run the project with Docker. It makes it easier to test the backend functionality.
 
 ---
 
@@ -17,19 +28,36 @@ I suggest you use the full stack setup to run the project with Docker. It makes 
 
 - **JWT Authentication** - Secure login with token-based auth
 - **Email verification** - Account verification via email code
-- **Posting, updating and deleting notes** - Users can post, update and delete notes
-- **Async file upload with MinIO integration** - Users can upload files to their notes
-- **Searching notes** - Users can search notes by title or author
+- **Posting, updating, deleting and searching notes** - Users can post, update, delete and look up notes
+- **File upload with MinIO integration** - Users can attach files to their notes
 - **Creating, updating and deleting groups** - Users can create, update and delete groups
-- **Sending messages** - Users can send messages to other users
+- **Sending messages** - Users can send messages to other users in groups
 - **Updating user profile** - Users can update their profile
 - **AI summarization** - Comprehensive notes summarization with AI 
 - **AI translation** - Multi-language notes translation using AI
-- **Rate limiting** - Rate limiting for API endpoints
+- **Rate limiting** - Rate limiting for API endpoints and for calls to external services
 - **Caching** - Caching for frequently used data
 - **Health monitoring** - Custom health indicators and metrics
 - **Logging with SLF4J** - Structured logging for debugging and monitoring
 - **Role-based access control** - Admin/User roles with appropriate permissions
+---
+
+## Screenshots
+### Homepage
+![Homepage](docs/homepage.png)
+
+### Note view
+![Note view](docs/noteview.png)
+
+### Note summary
+![Note summary](docs/notesummary.png)
+
+### Note translation
+![Note translation](docs/notetranslation.png)
+
+### Group view
+![Group view](docs/groupview.png)
+
 ---
 ## Tech stack
 
@@ -100,10 +128,6 @@ cd backend
 docker-compose up -d
 ```
 
-This will start:
-- PostgreSQL database on port 5433
-- MinIO object storage on ports 9000-9001
-- Spring Boot backend on port 8080
 
 ### Services Overview
 - **PostgreSQL**: Database on port 5433
@@ -111,57 +135,10 @@ This will start:
 - **Backend**: Spring Boot API on port 8080
 - **Frontend**: React app on port 5173 (full stack only)
 
-## API Documentation
+## API Documentation and Testing
 
-### Authentication
-- `POST /auth/register` - User registration
-- `POST /auth/login` - User login
-- `POST /auth/verify` - Email verification
-- `POST /auth/resend` - Resend verification code
-
-### Users
-- `GET /users/me` - Get current user profile
-- `PATCH /users/me` - Update current user profile
-- `GET /users/me/notes` - Get current user's notes
-- `GET /users/me/groups` - Get current user's groups
-- `GET /users/{username}` - Get user by username
-- `GET /users/{username}/notes` - Get user's notes
-- `GET /users/{username}/groups` - Get user's groups
-
-### Notes
-- `GET /notes` - Get all notes (with optional `partialName` search)
-- `GET /notes/{noteId}` - Get note by ID
-- `POST /notes` - Create note (multipart/form-data)
-- `PATCH /notes/{noteId}` - Update note (multipart/form-data)
-- `DELETE /notes/{noteId}` - Delete note
-- `DELETE /notes/{noteId}/images/{imageId}` - Delete note image
-- `GET /notes/{noteId}/summarize` - Summarize note with AI
-- `GET /notes/{noteId}/translate` - Translate note with AI
-
-### Groups
-- `GET /groups` - Get groups (with optional `name` or `owner` search)
-- `GET /groups/{groupId}` - Get group by ID
-- `GET /groups/{groupId}/members` - Get group members
-- `POST /groups` - Create group
-- `PATCH /groups/{groupId}` - Update group
-- `DELETE /groups/{groupId}` - Delete group
-- `POST /groups/{groupId}/members` - Join group
-- `POST /groups/{groupId}/members/{username}` - Add user to group
-- `DELETE /groups/{groupId}/members/{username}` - Remove user from group
-- `DELETE /groups/{groupId}/members/me` - Leave group
-
-### Messages
-- `GET /groups/{groupId}/messages` - Get group messages (paginated)
-- `POST /groups/{groupId}/messages` - Send message to group
-
-### Admin (Admin role required)
-- `GET /users` - Get all users
-- `PATCH /users/{username}` - Update user by admin
-- `GET /users/{username}/notes/admin` - Get user's notes (admin view)
-
-### Health Check
-- `GET /health` - Basic health check
-- `GET /health/rate-limiting` - Rate limiting health check
+For API documentation, check out [API](API.md) or backend [README](backend/README.md).
+For testing use tools like Postman or curl to test the API endpoints. The backend runs on `http://localhost:8080` when started.
 
 ## Development
 
@@ -185,10 +162,6 @@ npm run dev
 cd backend
 ./mvnw test
 ```
-
-### API Testing
-Use tools like Postman or curl to test the API endpoints. The backend runs on `http://localhost:8080` when started.
-
 
 
 ## Author

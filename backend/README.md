@@ -4,6 +4,8 @@
 
 This backend represents my **main focus and development effort** in the Notex project. It's where I concentrated most of my time and attention, building a comprehensive, production-ready foundation for the entire note-sharing ecosystem.
 
+Backend runs on docker container. If you want to run the backend locally, you still have to run container for **PostgreSQL database and MinIO** for it to work.
+
 ## Features
 - **JWT Authentication** - Secure login with token-based auth
 - **Email Verification** - Account verification via email code
