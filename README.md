@@ -169,8 +169,11 @@ Remember to set Java 21 as the default JDK.
 
 ```bash
 cd backend
+docker compose up -d
+docker stop backend-notex-standalone
 ./mvnw spring-boot:run
 ```
+This allows you to run the backend with containerized PostgreSQL and MinIO. Or just run the backend without containers.
 
 ### Frontend Development
 ```bash
