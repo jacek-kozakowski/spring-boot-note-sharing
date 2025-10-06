@@ -51,6 +51,3 @@ logs/
 *.db
 *.sqlite
 
-### Maven ###
-.mvn/timing.properties
-.mvn/wrapper/maven-wrapper.properties
