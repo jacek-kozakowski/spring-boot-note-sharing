@@ -74,6 +74,20 @@ I suggest you use the full stack setup to run the project with Docker. It makes 
 - Docker and Docker Compose
 - Git
 
+
+### Windows Users - Important!
+If you are working on Windows make sure you set:
+```bash
+git config --global core.autocrlf false
+```
+
+To check it use:
+```
+git config --globalcore.autocrlf
+```
+
+This allows Docker to run properly.
+
 ### Full Stack Setup
 1. Clone the repository
 ```bash
