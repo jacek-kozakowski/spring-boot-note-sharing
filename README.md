@@ -96,6 +96,11 @@ You can get your app passwords [here](https://myaccount.google.com/apppasswords)
 docker-compose up -d
 ```
 
+Wait until backend loads. To check if it works use:
+```bash
+docker logs backend-notex
+```
+
 4. Access the application
 - **Frontend**: http://localhost:5173
 - **Backend API**: http://localhost:8080
