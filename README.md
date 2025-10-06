@@ -78,7 +78,7 @@ I suggest you use the full stack setup to run the project with Docker. It makes 
 1. Clone the repository
 ```bash
 git clone https://github.com/notex-project/spring-boot-note-sharing.git
-cd springboot-note-sharing
+cd spring-boot-note-sharing
 ```
 
 2. Create `.env` file in the root directory and add environment variables
