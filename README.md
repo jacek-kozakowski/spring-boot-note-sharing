@@ -61,6 +61,7 @@ I suggest you use the full stack setup to run the project with Docker. It makes 
 ---
 ## Tech stack
 
+- **Java 21** - Backend language
 - **Spring Boot** - Backend framework
 - **React** - Frontend framework
 - **PostgreSQL** - Database
@@ -164,6 +165,8 @@ For testing use tools like Postman or curl to test the API endpoints. The backen
 ## Development
 
 ### Backend Development
+Remember to set Java 21 as the default JDK.
+
 ```bash
 cd backend
 ./mvnw spring-boot:run

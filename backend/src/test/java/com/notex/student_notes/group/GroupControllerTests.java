@@ -2,8 +2,8 @@ package com.notex.student_notes.group;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.notex.student_notes.auth.security.JwtAuthFilter;
-import com.notex.student_notes.config.ratelimiting.RateLimitingService;
 import com.notex.student_notes.config.ratelimiting.RateLimitExceededException;
+import com.notex.student_notes.config.ratelimiting.RateLimitingService;
 import com.notex.student_notes.group.controller.GroupController;
 import com.notex.student_notes.group.dto.CreateGroupDto;
 import com.notex.student_notes.group.dto.GroupDto;
@@ -27,7 +27,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;

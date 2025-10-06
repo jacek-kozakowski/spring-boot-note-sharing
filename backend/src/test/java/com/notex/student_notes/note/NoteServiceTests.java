@@ -9,7 +9,6 @@ import com.notex.student_notes.note.dto.UpdateNoteDto;
 import com.notex.student_notes.note.exceptions.UserNotNoteOwner;
 import com.notex.student_notes.note.mapper.NoteMapper;
 import com.notex.student_notes.note.model.Note;
-import com.notex.student_notes.note.model.NoteImage;
 import com.notex.student_notes.note.repository.NoteImageRepository;
 import com.notex.student_notes.note.repository.NoteRepository;
 import com.notex.student_notes.note.service.NoteService;
@@ -21,9 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;

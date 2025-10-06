@@ -1,6 +1,9 @@
 package com.notex.student_notes.group.service;
 
-import com.notex.student_notes.group.dto.*;
+import com.notex.student_notes.group.dto.CreateGroupDto;
+import com.notex.student_notes.group.dto.GroupDto;
+import com.notex.student_notes.group.dto.JoinGroupRequestDto;
+import com.notex.student_notes.group.dto.UpdateGroupDto;
 import com.notex.student_notes.group.exceptions.*;
 import com.notex.student_notes.group.model.Group;
 import com.notex.student_notes.group.repository.GroupRepository;
@@ -18,9 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @RequiredArgsConstructor
 @Slf4j

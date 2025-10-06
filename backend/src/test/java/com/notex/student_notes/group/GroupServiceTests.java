@@ -1,6 +1,9 @@
 package com.notex.student_notes.group;
 
-import com.notex.student_notes.group.dto.*;
+import com.notex.student_notes.group.dto.CreateGroupDto;
+import com.notex.student_notes.group.dto.GroupDto;
+import com.notex.student_notes.group.dto.JoinGroupRequestDto;
+import com.notex.student_notes.group.dto.UpdateGroupDto;
 import com.notex.student_notes.group.exceptions.*;
 import com.notex.student_notes.group.model.Group;
 import com.notex.student_notes.group.repository.GroupRepository;

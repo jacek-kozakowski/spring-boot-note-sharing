@@ -13,22 +13,19 @@ import com.notex.student_notes.note.exceptions.UserNotNoteOwner;
 import com.notex.student_notes.note.mapper.NoteMapper;
 import com.notex.student_notes.note.model.Note;
 import com.notex.student_notes.note.model.NoteImage;
-import com.notex.student_notes.note.repository.NoteRepository;
 import com.notex.student_notes.note.repository.NoteImageRepository;
+import com.notex.student_notes.note.repository.NoteRepository;
 import com.notex.student_notes.user.exceptions.UserNotFoundException;
 import com.notex.student_notes.user.model.User;
 import com.notex.student_notes.user.repository.UserRepository;
+import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
-import io.micrometer.core.instrument.Timer;
 
 import java.io.IOException;
 import java.time.LocalDateTime;

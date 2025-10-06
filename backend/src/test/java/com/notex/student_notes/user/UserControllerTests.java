@@ -10,8 +10,6 @@ import com.notex.student_notes.note.repository.NoteRepository;
 import com.notex.student_notes.note.service.NoteService;
 import com.notex.student_notes.user.dto.UpdateUserDto;
 import com.notex.student_notes.user.dto.UserDto;
-import com.notex.student_notes.user.model.Role;
-import com.notex.student_notes.user.model.User;
 import com.notex.student_notes.user.repository.UserRepository;
 import com.notex.student_notes.user.service.UserService;
 import org.junit.jupiter.api.Test;
@@ -24,13 +22,14 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc

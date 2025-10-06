@@ -4,7 +4,6 @@ import com.notex.student_notes.ai.summary.exceptions.SummaryGenerationFailedExce
 import com.notex.student_notes.ai.summary.model.Summary;
 import com.notex.student_notes.ai.summary.repository.SummaryRepository;
 import com.notex.student_notes.config.ai.AiCallsLimitingService;
-import com.notex.student_notes.config.ai.AiConfig;
 import com.notex.student_notes.note.exceptions.EmptyNoteException;
 import com.notex.student_notes.note.exceptions.NoteDeletedException;
 import com.notex.student_notes.note.exceptions.NoteNotFoundException;

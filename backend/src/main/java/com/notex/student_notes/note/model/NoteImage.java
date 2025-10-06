@@ -6,13 +6,11 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.ai.model.Media;
 import org.springframework.http.MediaType;
-import org.springframework.util.MimeType;
 import org.springframework.util.MimeTypeUtils;
 
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
-import java.net.URLStreamHandler;
 import java.time.LocalDateTime;
 
 @Getter

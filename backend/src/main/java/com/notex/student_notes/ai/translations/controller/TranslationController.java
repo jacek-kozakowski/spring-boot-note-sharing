@@ -2,7 +2,6 @@ package com.notex.student_notes.ai.translations.controller;
 
 import com.notex.student_notes.ai.translations.language.Language;
 import com.notex.student_notes.ai.translations.service.TranslationService;
-import com.notex.student_notes.config.ai.AiCallsLimitingService;
 import com.notex.student_notes.config.ratelimiting.RateLimitingService;
 import com.notex.student_notes.group.dto.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
