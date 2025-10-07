@@ -22,6 +22,8 @@ If you wish to test the backend part of the project without using the frontend, 
 
 I suggest you use the full stack setup to run the project with Docker. It makes it easier to test the backend functionality.
 
+AI services are optional, and the app will still work without them, but you won't be able to use AI features.
+
 ---
 
 ## Features
@@ -105,6 +107,8 @@ OPENAI_API_KEY=your-openai-api-key
 ```
 
 You can get your app passwords [here](https://myaccount.google.com/apppasswords). You have to have 2FA enabled.
+
+You can get your OpenAI API key [here](https://platform.openai.com/account/api-keys). The app will still work without it, but you won't be able to use AI services.
 
 3. Run the full stack
 ```bash
